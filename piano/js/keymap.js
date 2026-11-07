@@ -43,15 +43,29 @@
 
   const LABELS_US = {
     Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']', Backslash: '\\', Semicolon: ';', Quote: "'",
-    Comma: ',', Period: '.', Slash: '/', IntlBackslash: '\\', IntlRo: '/', Space: 'ESPAÇO',
+    Comma: ',', Period: '.', Slash: '/', IntlBackslash: '\\', IntlRo: '/', Space: 'ESPAÇO', Backquote: '`',
   };
-  const LABELS_ABNT2 = { BracketLeft: '´', BracketRight: '[', Backslash: ']', Semicolon: 'Ç', Quote: '~', Slash: ';', IntlBackslash: '\\', IntlRo: '/' };
+  const LABELS_ABNT2 = { Backquote: "'", BracketLeft: '´', BracketRight: '[', Backslash: ']', Semicolon: 'Ç', Quote: '~', Slash: ';', IntlBackslash: '\\', IntlRo: '/' };
   const LABELS_ISO = { Backslash: '#', IntlBackslash: '\\' };
   const NUMPAD = ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5', 'Numpad6', 'Numpad7', 'Numpad8', 'Numpad9', 'Numpad0'];
 
   const PRESETS = {
+    full: {
+      name: 'Teclado inteiro',
+      desc: 'TODAS as teclas tocam. Cada fileira é uma oitava: começa em Dó na esquerda e vai até Si na direita. Fileira de baixo = grave, fileira dos números = agudo. Segure SHIFT para subir uma oitava.',
+      shiftOctave: true,
+      build(layout) {
+        const m = {};
+        const rows = LAYOUTS[layout].rows;
+        rows.forEach((r, ri) => {
+          const base = 36 + (rows.length - 1 - ri) * 12; // Z = Dó2, A = Dó3, Q = Dó4, números = Dó5
+          r.keys.forEach((c, i) => (m[c] = base + i));
+        });
+        return m;
+      },
+    },
     tracker: {
-      name: 'Profissional',
+      name: 'Estilo piano',
       desc: 'Duas fileiras por oitava, como em programas de música (FL Studio, Ableton). Z X C V… são as teclas brancas de baixo, S D G H J as pretas; Q W E R… é a oitava de cima. ~2,5 oitavas contínuas.',
       build() {
         const m = {};
@@ -101,13 +115,43 @@
     return 'ansi';
   };
 
+  /** Desenho do teclado físico completo (larguras em "u" = 1 tecla). */
+  function displayRows(layout) {
+    const L = LAYOUTS[layout].rows;
+    const k = (codes) => codes.map((c) => [c, 1]);
+    const r0 = [['Backquote', 1], ...k(L[0].keys), ['Backspace', 2]];
+    const bottom = [['ControlLeft', 1.75], ['AltLeft', 1.5], ['Space', 8], ['AltRight', 1.5], ['ControlRight', 2.25]];
+    if (layout === 'ansi') {
+      return [
+        r0,
+        [['Tab', 1.5], ...k(L[1].keys.slice(0, 12)), ['Backslash', 1.5]],
+        [['CapsLock', 1.75], ...k(L[2].keys), ['Enter', 2.25]],
+        [['ShiftLeft', 2.25], ...k(L[3].keys), ['ShiftRight', 2.75]],
+        bottom,
+      ];
+    }
+    const zKeys = L[3].keys;
+    return [
+      r0,
+      [['Tab', 1.5], ...k(L[1].keys), ['Enter', 1.5]],
+      [['CapsLock', 1.75], ...k(L[2].keys), ['Enter', 1.25, 'tail']],
+      [['ShiftLeft', 1.25], ...k(zKeys), ['ShiftRight', 15 - 1.25 - zKeys.length]],
+      bottom,
+    ];
+  }
+  const ARROWS = [
+    [null, ['ArrowUp', 1], null],
+    [['ArrowLeft', 1], ['ArrowDown', 1], ['ArrowRight', 1]],
+  ];
+
   const keymap = {
     PRESETS,
     LAYOUTS,
-    preset: store.get('kb.preset', 'tracker'),
+    preset: store.get('kb.v', 0) >= 2 ? store.get('kb.preset', 'full') : 'full',
     layout: store.get('kb.layout', guessLayout()),
     octave: store.get('kb.octave', 0),
     custom: store.get('kb.custom', null),
+    DISPLAY: null, // definido abaixo
     numpadBass: store.get('kb.numpad', false),
     velocity: store.get('kb.velocity', 0.78),
     sustainKey: 'Space',
@@ -119,7 +163,11 @@
     enabled: true,
 
     init() {
-      if (!PRESETS[this.preset]) this.preset = 'tracker';
+      if (!PRESETS[this.preset]) this.preset = 'full';
+      if (store.get('kb.v', 0) < 2) {
+        this.octave = 0;
+        store.set('kb.v', 2);
+      }
       if (!LAYOUTS[this.layout]) this.layout = 'abnt2';
       this.rebuild();
       if (navigator.keyboard && navigator.keyboard.getLayoutMap) {
@@ -137,7 +185,7 @@
     },
 
     rebuild() {
-      let base = this.preset === 'custom' ? Object.assign({}, this.custom || PRESETS.tracker.build()) : PRESETS[this.preset].build();
+      let base = this.preset === 'custom' ? Object.assign({}, this.custom || PRESETS.full.build(this.layout)) : PRESETS[this.preset].build(this.layout);
       if (this.numpadBass) NUMPAD.forEach((c, i) => (base[c] = [36, 38, 40, 41, 43, 45, 47, 48, 50, 35][i]));
       const shift = this.octave * 12;
       // nos mapas prontos, só usa teclas que existem no formato escolhido
@@ -157,6 +205,9 @@
       if (PRESETS[this.preset].shiftSharp) {
         for (const [code, midi] of Object.entries(this.map)) if (util.isBlack(midi + 1)) add(midi + 1, code, true);
       }
+      if (PRESETS[this.preset].shiftOctave) {
+        for (const [code, midi] of Object.entries(this.map)) if (midi + 12 <= 108 && !this.reverse.has(midi + 12)) add(midi + 12, code, true);
+      }
       this._avail = new Set(this.reverse.keys());
       store.set('kb.preset', this.preset);
       store.set('kb.layout', this.layout);
@@ -169,6 +220,7 @@
     setPreset(id) {
       if (!PRESETS[id]) return;
       if (id === 'custom' && !this.custom) this.custom = this.baseMap();
+      store.set('kb.v', 2);
       this.preset = id;
       this.octave = 0;
       this.rebuild();
@@ -235,7 +287,12 @@
       const m = this.map[code];
       if (m == null) return null;
       if (shift && PRESETS[this.preset].shiftSharp && util.isBlack(m + 1)) return m + 1;
+      if (shift && PRESETS[this.preset].shiftOctave && m + 12 <= 108) return m + 12;
       return m;
+    },
+    shiftMeaning() {
+      const p = PRESETS[this.preset];
+      return p.shiftSharp ? 'SUSTENIDO ♯' : p.shiftOctave ? 'OITAVA ↑' : '';
     },
     /** Rótulo visível da tecla, respeitando o layout real do usuário quando possível. */
     label(code) {
@@ -290,7 +347,8 @@
       }
       if (this._isTyping(e) || !this.enabled) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      const special = this._special(e);
+      let special = this._special(e);
+      if (special === 'metronome' && this.map[e.code] != null) special = null;
       if (special) {
         e.preventDefault();
         if (!e.repeat) bus.emit('key:special', special, true);
@@ -337,8 +395,13 @@
           return 'escape';
         case 'Backspace':
           return 'restart';
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          return null;
         case 'Tab':
           return 'mic';
+        case 'Backquote':
+          return 'metronome';
         default:
           return null;
       }
@@ -350,5 +413,7 @@
     },
   };
 
+  keymap.displayRows = displayRows;
+  keymap.ARROWS = ARROWS;
   PN.keymap = keymap;
 })();

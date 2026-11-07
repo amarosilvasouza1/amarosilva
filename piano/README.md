@@ -1,7 +1,7 @@
 # 🎹 Pianeon — piano no teclado do computador
 
 Toque piano com o **teclado do PC**, aprenda músicas **como num jogo**, importe arquivos **MIDI** e converse com a **sua própria IA** enquanto toca.
-Visual de "painel de estúdio": pista 3D com notas, piano roll, mostrador de compasso, waveform, scope, spectrum, vector e espectrograma — tudo reagindo ao que você toca.
+Visual de "painel de estúdio": lista de músicas, pista 3D com notas e partículas, piano desenhado, teclado do computador desenhado, piano roll, mostrador de compasso e medidores de áudio (waveform, scope, spectrum, vector, espectrograma), tudo reagindo ao que você toca. Tem tema claro e escuro.
 
 ## Como abrir
 
@@ -15,40 +15,61 @@ Não precisa instalar nada: é HTML, CSS e JavaScript puros.
 
 ## Teclado (cada pessoa tem um diferente)
 
-Em **⌨ TECLADO** você escolhe:
+O padrão é o **Teclado inteiro**: **todas as teclas tocam**.
+
+| Fileira | Notas |
+|---|---|
+| Números (`1 2 3 … - =`) | Dó5 até Si5 (agudo) |
+| `Q W E R T …` | Dó4 até Si4 — **`Q` é o Dó central** |
+| `A S D F G …` | Dó3 até Si3 |
+| `Z X C V B …` | Dó2 até Si2 (grave) |
+
+Cada fileira é uma oitava: começa em Dó na esquerda e vai até Si na direita. Segure **Shift** para tocar uma oitava acima.
+No teclado ABNT2 isso dá 48 notas, 4 oitavas completas, sem nenhuma tecla sobrando.
+
+O teclado desenhado na tela mostra a nota de cada tecla. As teclas escuras são os sustenidos (as "teclas pretas") e as teclas de comando também aparecem identificadas.
+
+Em **⌨ TECLADO → TROCAR MAPA** dá para escolher outros estilos:
 
 | Mapa | Como funciona |
 |---|---|
-| **Profissional** (padrão) | Como no FL Studio/Ableton: `Z X C V B N M` = teclas brancas, `S D G H J` = pretas; `Q W E R T Y U` = oitava de cima, `2 3 5 6 7` = pretas. ~2,5 oitavas seguidas. |
-| **Virtual Piano / Roblox** | `1 2 3… Q W E… A S D… Z X C…` = teclas brancas (5 oitavas). **Shift** = sustenido. Funciona com as partituras de letras da internet. |
-| **Uma fileira** | `A S D F G H J K L` = brancas, `W E T Y U O P` = pretas. `Z`/`X` trocam a oitava. Ótimo para notebook. |
-| **Personalizado** | Clique numa nota do piano e aperte qualquer tecla. Dá para exportar/importar o mapa (`.json`). |
+| **Teclado inteiro** (padrão) | Uma oitava por fileira, todas as teclas tocam. |
+| **Estilo piano** | Como no FL Studio/Ableton: `Z X C V B N M` = brancas, `S D G H J` = pretas; `Q W E R T Y U` = oitava de cima. |
+| **Virtual Piano / Roblox** | `1 2 3… Q W E… A S D… Z X C…` = teclas brancas (5 oitavas). **Shift** = sustenido. Funciona com partituras de letras. |
+| **Uma fileira** | `A S D F G H J K L` = brancas, `W E T Y U O P` = pretas. `Z`/`X` trocam a oitava. Bom para notebook. |
+| **Personalizado** | Clique numa nota e aperte qualquer tecla. Dá para exportar/importar o mapa (`.json`). |
 
-- **Formato**: ABNT2 (com Ç), ANSI (EUA) ou ISO (Europa) — o desenho das teclas e as teclas extras mudam conforme o seu teclado. O app tenta detectar sozinho.
+- **Formato**: ABNT2 (com Ç), ANSI (EUA) ou ISO (Europa). O desenho e as teclas extras mudam conforme o seu teclado, e o app tenta detectar sozinho.
 - Teclados completos: opção para o **teclado numérico** tocar notas graves.
 - **Teclado MIDI** USB/Bluetooth funciona direto (Chrome/Edge).
-- Celular/tablet: toque nas teclas desenhadas ou nos círculos da pista.
+- Celular/tablet: toque no piano desenhado ou nos círculos da pista.
 
-**Atalhos:** `← →` oitava · `↑ ↓` velocidade · `Espaço` pedal (sustain) · `Enter` tocar/pausar · `Backspace` recomeçar · `Tab` falar com a IA · `Esc` fechar/pausar.
+**Atalhos:** `← →` oitava · `↑ ↓` velocidade · `Espaço` pedal · `Enter` tocar/pausar · `Backspace` recomeçar · `Tab` falar com a IA · tecla ao lado do `1` = metrônomo · `Esc` fechar/pausar.
 
-## Modos de jogo
+## Como aprender
 
-- **Assistir** — a música toca sozinha e mostra as teclas.
-- **Praticar** — a música para e **espera você acertar** cada nota (ótimo para aprender).
-- **Desafio** — tempo real com **PERFEITO / ÓTIMO / BOM**, combo, multiplicador até ×4, estrelas e recordes.
+1. Escolha uma música na lista **MÚSICAS** (lado esquerdo).
+2. No cartão que aparece, escolha o modo, as mãos e a velocidade, e aperte **▶ COMEÇAR** (ou `Enter`).
 
-Escolha a mão (**ESQ / AMBAS / DIR**) e a velocidade (25%–200%). A outra mão toca automaticamente.
-Se a música tiver notas fora do alcance do seu teclado, o app ajusta a oitava (dá para desligar em Ajustes).
+- **Ouvir**: a música toca sozinha e mostra as teclas.
+- **Aprender**: a música para e **espera você acertar** a tecla que pisca.
+- **Jogar**: tempo real com **PERFEITO / ÓTIMO / BOM**, combo até ×4, estrelas e recordes.
+- **Livre**: toque à vontade; o que você toca sobe pela pista.
+
+A outra mão toca sozinha. Se a música tiver notas fora do alcance do seu teclado, o app ajusta a oitava (dá para desligar em Ajustes).
 
 ## Músicas
 
-- **12 músicas incluídas** (domínio público): Escala de Dó, Maria Tinha um Carneirinho, Brilha Brilha Estrelinha, Ode à Alegria, Jingle Bells, Parabéns pra Você, Minueto em Sol, Cânone em Ré, Na Gruta do Rei da Montanha, Gymnopédie nº 1, Für Elise e Prelúdio em Dó.
-- **Arquivos MIDI** (`.mid`): arraste em qualquer lugar da tela ou use **♫ MÚSICAS → + IMPORTAR**. Também dá para colar um link direto de `.mid`.
+- **18 músicas de exemplo** (domínio público), separadas em:
+  - **Fáceis**: Escala de Dó, Dó Ré Mi Fá, Maria Tinha um Carneirinho, Brilha Brilha Estrelinha, Frei Martinho, Seu Lobato Tinha um Sítio.
+  - **Festas**: Parabéns pra Você, Jingle Bells, Noite Feliz, When the Saints Go Marching In.
+  - **Clássicas**: Ode à Alegria, Minueto em Sol, Cânone em Ré, Na Gruta do Rei da Montanha, Gymnopédie nº 1, Pequena Serenata Noturna, Für Elise, Prelúdio em Dó.
+- **Arquivos MIDI** (`.mid`): arraste em qualquer lugar da tela ou use **+ IMPORTAR**. Também dá para colar um link direto de `.mid`.
 - **Partituras de letras** (Virtual Piano / Roblox): cole algo como `[tu] y t r e | [qe] w q 0`.
 - **Gravar**: aperte **● GRAVAR**, toque, e a gravação vira uma música (dá para baixar em `.mid`).
 - **Peça para a IA** criar, arranjar ou baixar músicas.
 
-> Arquivos de áudio (mp3/wav) não viram notas automaticamente — use a versão MIDI da música ou peça para a IA.
+> Arquivos de áudio (mp3/wav) não viram notas automaticamente. Use a versão MIDI da música ou peça para a IA.
 
 ## IA própria (Claude, OpenAI, Gemini, Ollama…)
 

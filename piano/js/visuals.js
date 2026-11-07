@@ -515,16 +515,30 @@
     }
   }
 
+  // ------------------------------------------------------------------ efeitos (partículas)
+  const fx = { parts: [], flash: [] };
+  function burst(midi, kind) {
+    const col = { perfect: C.teal, great: C.blue, good: C.purple, hit: C.green, note: C.purple, wrong: C.red, miss: C.red }[kind] || C.purple;
+    const n = kind === 'note' ? 7 : kind === 'wrong' || kind === 'miss' ? 5 : 18;
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.95;
+      const sp = 70 + Math.random() * (kind === 'note' ? 110 : 230);
+      fx.parts.push({ midi, x: 0, y: 0, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: 0.45 + Math.random() * 0.45, col, r: 1.4 + Math.random() * 2.4 });
+    }
+    if (kind !== 'wrong' && kind !== 'miss') fx.flash.push({ midi, age: 0, col });
+    if (fx.parts.length > 500) fx.parts.splice(0, fx.parts.length - 500);
+  }
+
   // ------------------------------------------------------------------ pista 3D
   function drawHighway(p, S) {
     const { ctx, w, h } = p;
     ctx.clearRect(0, 0, w, h);
     const lanes = S.lanes;
     const n = lanes.length;
-    const hitY = h - 58;
-    const horizonY = 40;
+    const hitY = h - 62;
+    const horizonY = 46;
     const vx = w / 2;
-    const trackW = Math.min(w - 36, Math.max(260, n * 64));
+    const trackW = Math.min(w - 40, Math.max(280, n * 66));
     const left = vx - trackW / 2;
     const laneW = trackW / n;
     const LA = S.lookahead * (S.song ? S.speed : 1);
@@ -536,31 +550,48 @@
       const s = 1 / (1 + d);
       return [vx + (x - vx) * s, horizonY + (hitY - horizonY) * s, s];
     };
+    const quad = (xa, xb, a, b) => {
+      const [x1, y1] = proj(xa, a);
+      const [x2] = proj(xb, a);
+      const [x3, y3] = proj(xb, b);
+      const [x4] = proj(xa, b);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y1);
+      ctx.lineTo(x3, y3);
+      ctx.lineTo(x4, y3);
+      ctx.closePath();
+    };
 
-    // piso
-    const [ax, ay] = proj(left, -0.06 * LA);
-    const [bx] = proj(left + trackW, -0.06 * LA);
-    const [cx2, cy2] = proj(left + trackW, LA);
-    const [dx] = proj(left, LA);
-    const grd = ctx.createLinearGradient(0, cy2, 0, ay);
-    grd.addColorStop(0, alpha(C.panel2, 0));
-    grd.addColorStop(1, C.panel2);
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.moveTo(ax, ay);
-    ctx.lineTo(bx, ay);
-    ctx.lineTo(cx2, cy2);
-    ctx.lineTo(dx, cy2);
-    ctx.closePath();
+    // brilho no horizonte
+    const glow = ctx.createRadialGradient(vx, horizonY + 10, 4, vx, horizonY + 10, trackW * 0.55);
+    glow.addColorStop(0, alpha(C.blue, 0.12));
+    glow.addColorStop(1, alpha(C.blue, 0));
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, hitY);
+
+    // piso com faixas claras (notas brancas) e escuras (notas pretas)
+    const floor = ctx.createLinearGradient(0, horizonY, 0, hitY);
+    floor.addColorStop(0, alpha(C.panel2, 0));
+    floor.addColorStop(1, C.panel2);
+    ctx.fillStyle = floor;
+    quad(left, left + trackW, -0.06 * LA, LA);
     ctx.fill();
-
-    // linhas das faixas
+    for (let i = 0; i < n; i++) {
+      if (!util.isBlack(lanes[i])) continue;
+      const g = ctx.createLinearGradient(0, horizonY, 0, hitY);
+      g.addColorStop(0, alpha(C.grid, 0));
+      g.addColorStop(1, alpha(C.grid, 0.9));
+      ctx.fillStyle = g;
+      quad(left + i * laneW, left + (i + 1) * laneW, -0.06 * LA, LA);
+      ctx.fill();
+    }
     ctx.lineWidth = 1;
     for (let i = 0; i <= n; i++) {
       const x = left + i * laneW;
       const [x1, y1] = proj(x, -0.06 * LA);
       const [x2, y2] = proj(x, LA);
-      ctx.strokeStyle = i === 0 || i === n ? C.line : C.grid;
+      ctx.strokeStyle = i === 0 || i === n ? C.line : alpha(C.line, 0.45);
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
@@ -575,12 +606,12 @@
       for (let g = 0; beat <= endB && g < 64; beat++, g++) {
         const dt = B.timeAt(beat) - now;
         if (dt < 0) continue;
-        const [xa, y] = proj(left, dt);
+        const [xa, y, s] = proj(left, dt);
         const [xb] = proj(left + trackW, dt);
         const rel = beat - pick;
         const isBar = ((rel % S.timeSig) + S.timeSig) % S.timeSig === 0;
-        ctx.strokeStyle = isBar ? C.line : alpha(C.grid, 0.8);
-        ctx.lineWidth = isBar ? 1.2 : 0.7;
+        ctx.strokeStyle = isBar ? alpha(C.line, 0.9) : alpha(C.line, 0.35);
+        ctx.lineWidth = isBar ? 1.4 * s + 0.4 : 0.8;
         ctx.beginPath();
         ctx.moveTo(xa, y);
         ctx.lineTo(xb, y);
@@ -591,45 +622,36 @@
     const laneX = (i) => left + (i + 0.5) * laneW;
     const beam = (i, color, strength) => {
       const xc = laneX(i);
-      const hw = laneW * 0.2;
-      const [x1, y1] = proj(xc - hw, 0);
-      const [x2] = proj(xc + hw, 0);
-      const [x3, y3] = proj(xc + hw, LA);
-      const [x4] = proj(xc - hw, LA);
+      const hw = laneW * 0.22;
+      const [, y1] = proj(xc, 0);
+      const [, y3] = proj(xc, LA);
       const g = ctx.createLinearGradient(0, y3, 0, y1);
       g.addColorStop(0, alpha(color, 0));
       g.addColorStop(1, alpha(color, strength));
       ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y1);
-      ctx.lineTo(x3, y3);
-      ctx.lineTo(x4, y3);
-      ctx.closePath();
+      quad(xc - hw, xc + hw, 0, LA);
       ctx.fill();
     };
-
-    // faixas acesas (acompanhamento e você)
-    for (const i of S.autoLanes) beam(i, C.teal, 0.35);
+    for (const i of S.autoLanes) beam(i, C.teal, 0.32);
     for (const [midi] of S.held) {
       const i = S.laneIndex.get(midi);
-      if (i != null) beam(i, C.purple, 0.6);
+      if (i != null) beam(i, C.purple, 0.55);
     }
 
     // notas
-    const tail = (xc, a, b, hw, color) => {
-      const [x1, y1] = proj(xc - hw, a);
-      const [x2] = proj(xc + hw, a);
-      const [x3, y3] = proj(xc + hw, b);
-      const [x4] = proj(xc - hw, b);
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y1);
-      ctx.lineTo(x3, y3);
-      ctx.lineTo(x4, y3);
-      ctx.closePath();
+    const pill = (x, y, wdt, hgt, col, glowOn) => {
+      const g = ctx.createLinearGradient(0, y - hgt / 2, 0, y + hgt / 2);
+      g.addColorStop(0, alpha('#ffffff', 0.9));
+      g.addColorStop(0.35, col);
+      g.addColorStop(1, col);
+      if (glowOn) {
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 14;
+      }
+      ctx.fillStyle = g;
+      rrect(ctx, x - wdt / 2, y - hgt / 2, wdt, hgt, hgt / 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
     };
     if (S.song) {
       const notes = S.notes;
@@ -647,24 +669,22 @@
         const col = nt.judge === 'miss' ? C.red : handColor(nt);
         const a = Math.max(dt0, 0);
         const b = Math.min(dt1, LA);
-        if (b > a + 0.01) tail(xc, a, b, laneW * 0.13, alpha(col, isHit ? 0.75 : 0.4));
+        if (b > a + 0.01) {
+          ctx.fillStyle = alpha(col, isHit ? 0.7 : 0.38);
+          quad(xc - laneW * 0.14, xc + laneW * 0.14, a, b);
+          ctx.fill();
+        }
         if (!isHit && dt0 >= -0.2 * S.speed) heads.push([xc, dt0, col, nt]);
       }
-      // cabeças de trás para frente (as mais próximas por cima)
       for (let k = heads.length - 1; k >= 0; k--) {
         const [xc, dt0, col, nt] = heads[k];
         const [x, y, s] = proj(xc, dt0);
-        const r = util.clamp(laneW * 0.3 * s, 2, 17);
-        ctx.fillStyle = col;
-        ctx.beginPath();
-        ctx.ellipse(x, y, r, r * 0.72, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = alpha(C.ink, 0.35);
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        if (s > 0.55 && r > 9 && S.showKeyOnNotes) {
+        const pw = util.clamp(laneW * 0.74 * s, 4, 54);
+        const ph = util.clamp(16 * s, 3, 18);
+        pill(x, y, pw, ph, col, s > 0.62);
+        if (s > 0.55 && ph >= 12 && S.showKeyOnNotes) {
           const kl = S.keyLabel(nt.playMidi);
-          if (kl) label(ctx, kl, x, y + 4, '#fff', Math.min(12, r * 0.9), 700, 'center');
+          if (kl) label(ctx, kl, x, y + 4, '#ffffff', Math.min(12, ph * 0.75), 700, 'center');
         }
       }
     } else {
@@ -672,23 +692,47 @@
       for (const l of S.live) {
         const i = S.laneIndex.get(l.midi);
         if (i == null) continue;
-        const a = (now - (l.end == null ? now : l.end)) * 1.0;
-        const b = (now - l.start) * 1.0;
+        const a = now - (l.end == null ? now : l.end);
+        const b = now - l.start;
         if (a > LA) continue;
         const xc = laneX(i);
-        tail(xc, Math.max(0, a), Math.min(LA, b), laneW * 0.16, alpha(C.purple, 0.45));
-        const [x, y, s] = proj(xc, Math.min(LA, b));
-        const r = util.clamp(laneW * 0.28 * s, 2, 15);
-        ctx.fillStyle = C.purple;
-        ctx.beginPath();
-        ctx.ellipse(x, y, r, r * 0.72, 0, 0, Math.PI * 2);
+        ctx.fillStyle = alpha(C.purple, 0.4);
+        quad(xc - laneW * 0.15, xc + laneW * 0.15, Math.max(0, a), Math.min(LA, b));
         ctx.fill();
+        const [x, y, s] = proj(xc, Math.min(LA, b));
+        pill(x, y, util.clamp(laneW * 0.7 * s, 3, 50), util.clamp(14 * s, 3, 16), C.purple, false);
       }
     }
 
+    // linha de acerto
+    const [hx1] = proj(left, 0);
+    const [hx2] = proj(left + trackW, 0);
+    const hg = ctx.createLinearGradient(hx1, 0, hx2, 0);
+    hg.addColorStop(0, alpha(C.teal, 0.85));
+    hg.addColorStop(0.5, alpha(C.blue, 0.85));
+    hg.addColorStop(1, alpha(C.purple, 0.85));
+    ctx.fillStyle = hg;
+    ctx.fillRect(hx1, hitY - 1.5, hx2 - hx1, 3);
+
+    // flashes de acerto
+    for (const f of fx.flash) {
+      f.age += S.dt;
+      const i = S.laneIndex.get(f.midi);
+      if (i == null) continue;
+      const a = 1 - f.age / 0.35;
+      if (a <= 0) continue;
+      const xc = laneX(i);
+      const g = ctx.createRadialGradient(xc, hitY, 2, xc, hitY, laneW * 0.9);
+      g.addColorStop(0, alpha(f.col, 0.55 * a));
+      g.addColorStop(1, alpha(f.col, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(xc - laneW, hitY - laneW, laneW * 2, laneW * 2);
+    }
+    fx.flash = fx.flash.filter((f) => f.age < 0.35);
+
     // círculos de acerto
-    const showLabels = laneW >= 22;
-    const every = showLabels ? 1 : Math.ceil(22 / laneW);
+    const showLabels = laneW >= 26;
+    const pulse = 0.5 + 0.5 * Math.sin(S.now * 8);
     for (let i = 0; i < n; i++) {
       const xc = laneX(i);
       const r = util.clamp(laneW * 0.34, 3, 15);
@@ -696,48 +740,60 @@
       const held = S.held.has(midi);
       const autoOn = S.autoLanes.has(i);
       const hint = S.hintLanes.has(i);
-      ctx.lineWidth = 1.5;
+      if (hint && !held) {
+        ctx.strokeStyle = alpha(C.blue, 0.25 + 0.35 * pulse);
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(xc, hitY, r + 4 + pulse * 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 1.6;
       ctx.strokeStyle = held ? C.purple : hint ? C.blue : C.line;
       ctx.fillStyle = held ? C.purple : autoOn ? C.teal : C.panel;
+      if (held) {
+        ctx.shadowColor = C.purple;
+        ctx.shadowBlur = 14;
+      }
       ctx.beginPath();
       ctx.arc(xc, hitY, r, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
       ctx.stroke();
-      if (held || hint) {
-        ctx.strokeStyle = alpha(held ? C.purple : C.blue, held ? 0.45 : 0.35);
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(xc, hitY, r + 4, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      if (i % every === 0) {
-        label(ctx, S.noteName(midi), xc, hitY - r - 8, held ? C.purple : C.muted, showLabels ? 10 : 9, 500, 'center');
+      if (showLabels || midi % 12 === 0 || held) label(ctx, S.noteName(midi), xc, hitY - r - 8, held ? C.purple : C.muted, showLabels ? 10 : 9, 500, 'center');
+      if (laneW >= 15 || held) {
         const kl = S.keyLabel(midi);
         if (kl) {
           ctx.font = '600 10px ' + MONO;
-          const tw = Math.max(14, ctx.measureText(kl).width + 8);
+          const tw = Math.max(15, ctx.measureText(kl).width + 8);
           ctx.fillStyle = held ? C.purple : C.panel;
           ctx.strokeStyle = held ? C.purple : C.line;
           ctx.lineWidth = 1;
-          rrect(ctx, xc - tw / 2, hitY + r + 6, tw, 15, 3);
+          rrect(ctx, xc - tw / 2, hitY + r + 7, tw, 16, 4);
           ctx.fill();
           ctx.stroke();
-          label(ctx, kl, xc, hitY + r + 17, held ? '#fff' : C.ink, 10, 600, 'center');
+          label(ctx, kl, xc, hitY + r + 18.5, held ? '#fff' : C.ink, 10, 600, 'center');
         }
       }
     }
 
-    // ondas de toque
-    for (const rp of S.ripples) {
-      const i = S.laneIndex.get(rp.midi);
-      if (i == null) continue;
-      const r0 = util.clamp(laneW * 0.34, 3, 15);
-      ctx.strokeStyle = alpha(C.purple, 1 - rp.age / 0.6);
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(laneX(i), hitY, r0 + rp.age * 60, 0, Math.PI * 2);
-      ctx.stroke();
+    // partículas
+    for (const pt of fx.parts) {
+      pt.life += S.dt;
+      pt.x += pt.vx * S.dt;
+      pt.y += pt.vy * S.dt;
+      pt.vy += 380 * S.dt;
     }
+    fx.parts = fx.parts.filter((pt) => pt.life < pt.max);
+    for (const pt of fx.parts) {
+      const i = S.laneIndex.get(pt.midi);
+      if (i == null) continue;
+      ctx.globalAlpha = Math.max(0, 1 - pt.life / pt.max);
+      ctx.fillStyle = pt.col;
+      ctx.beginPath();
+      ctx.arc(laneX(i) + pt.x, hitY + pt.y, pt.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
 
     // textos de julgamento
     const jc = { perfect: C.teal, great: C.blue, good: C.purple, miss: C.red, wrong: C.red, hit: C.green };
@@ -746,46 +802,166 @@
       const x = i != null ? laneX(i) : vx;
       const a = 1 - pp.age / 0.9;
       ctx.globalAlpha = Math.max(0, a);
-      label(ctx, pp.text, util.clamp(x, 50, w - 50), hitY - 44 - pp.age * 46, jc[pp.kind] || C.ink, 12, 700, 'center');
+      label(ctx, pp.text, util.clamp(x, 50, w - 50), hitY - 46 - pp.age * 46, jc[pp.kind] || C.ink, 12, 700, 'center');
     }
     ctx.globalAlpha = 1;
 
-    // HUD
+    // painel de informações
     const st = S.stats;
     if (S.mode === 'challenge') {
-      label(ctx, 'PONTOS ' + String(Math.round(st.score)).padStart(7, '0'), 14, 22, C.ink, 14, 600);
-      label(ctx, st.combo + ' COMBO  ×' + S.multiplier, w - 14, 22, C.blue, 13, 600, 'right');
+      label(ctx, 'PONTOS', 16, 22, C.muted, 10, 600);
+      label(ctx, String(Math.round(st.score)).padStart(7, '0'), 16, 40, C.ink, 18, 700);
+      label(ctx, 'COMBO', w - 16, 22, C.muted, 10, 600, 'right');
+      label(ctx, st.combo + '  ×' + S.multiplier, w - 16, 40, C.blue, 18, 700, 'right');
     } else if (S.mode === 'practice') {
-      label(ctx, 'CERTAS ' + String(st.correct).padStart(4, '0') + '   ERRADAS ' + String(st.wrong).padStart(3, '0'), 14, 22, C.ink, 13, 600);
-      label(ctx, st.combo + ' SEGUIDAS', w - 14, 22, C.blue, 13, 600, 'right');
-    } else if (S.mode === 'watch') {
-      label(ctx, 'ASSISTINDO', 14, 22, C.ink, 13, 600);
-      label(ctx, 'toque junto se quiser', w - 14, 22, C.muted, 11, 500, 'right');
+      label(ctx, 'CERTAS / ERRADAS', 16, 22, C.muted, 10, 600);
+      label(ctx, st.correct + ' / ' + st.wrong, 16, 40, C.ink, 18, 700);
+      label(ctx, 'SEGUIDAS', w - 16, 22, C.muted, 10, 600, 'right');
+      label(ctx, String(st.combo), w - 16, 40, C.blue, 18, 700, 'right');
     } else {
-      label(ctx, 'MODO LIVRE', 14, 22, C.ink, 13, 600);
-      label(ctx, 'toque qualquer tecla destacada', w - 14, 22, C.muted, 11, 500, 'right');
+      label(ctx, PN.MODES[S.mode].name, 16, 22, C.muted, 10, 600);
+      label(ctx, S.song ? 'OUVINDO' : 'TOQUE À VONTADE', 16, 40, C.ink, 15, 700);
     }
-    label(ctx, 'FAIXA ' + S.trackText, 14, h - 10, C.muted, 10, 500);
-    label(ctx, Math.round(S.bpm * (S.song ? S.speed : 1)) + ' BPM', w - 14, h - 10, C.muted, 10, 500, 'right');
+    if (S.hint && !S.waitingText) {
+      ctx.font = '500 12px ' + MONO;
+      label(ctx, S.hint, vx, 26, C.muted, 11.5, 500, 'center');
+    }
+    label(ctx, S.trackText, 16, h - 10, C.muted, 10, 500);
+    label(ctx, Math.round(S.bpm * (S.song ? S.speed : 1)) + ' BPM', w - 16, h - 10, C.muted, 10, 500, 'right');
 
     if (S.waitingText) {
-      ctx.font = '600 12px ' + MONO;
-      const tw = ctx.measureText(S.waitingText).width + 24;
-      ctx.fillStyle = alpha(C.blue, 0.12);
+      ctx.font = '600 13px ' + MONO;
+      const tw = ctx.measureText(S.waitingText).width + 28;
+      ctx.fillStyle = alpha(C.blue, 0.12 + 0.06 * pulse);
       ctx.strokeStyle = C.blue;
-      rrect(ctx, vx - tw / 2, 34, tw, 24, 5);
+      ctx.lineWidth = 1.5;
+      const wy = w < 640 ? 56 : 14; // em telas estreitas, abaixo do placar
+      rrect(ctx, vx - tw / 2, wy, tw, 28, 8);
       ctx.fill();
       ctx.stroke();
-      label(ctx, S.waitingText, vx, 50, C.blue, 12, 600, 'center');
+      label(ctx, S.waitingText, vx, wy + 19, C.blue, 13, 600, 'center');
     }
     if (S.countdown) {
       ctx.globalAlpha = 0.85;
-      label(ctx, S.countdown, vx, h * 0.48, C.ink, Math.min(110, h * 0.25), 700, 'center');
+      label(ctx, S.countdown, vx, h * 0.5, C.ink, Math.min(110, h * 0.25), 700, 'center');
       ctx.globalAlpha = 1;
     }
     if (S.state === 'paused') {
-      label(ctx, '❚❚ PAUSADO — ENTER para continuar', vx, h * 0.45, C.muted, 13, 600, 'center');
+      ctx.fillStyle = alpha(C.panel, 0.8);
+      rrect(ctx, vx - 170, h * 0.42 - 22, 340, 36, 10);
+      ctx.fill();
+      label(ctx, '❚❚  PAUSADO — ENTER para continuar', vx, h * 0.42, C.ink, 13, 600, 'center');
     }
+  }
+
+  // ------------------------------------------------------------------ piano
+  function drawPiano(p, S) {
+    const { ctx, w, h } = p;
+    ctx.clearRect(0, 0, w, h);
+    const [lo, hi] = S.pianoRange;
+    const whites = [];
+    for (let m = lo; m <= hi; m++) if (!util.isBlack(m)) whites.push(m);
+    if (!whites.length) return;
+    const ww = w / whites.length;
+    const xw = new Map();
+    whites.forEach((m, i) => xw.set(m, i * ww));
+    const blacks = [];
+    const bw = ww * 0.6;
+    const bh = h * 0.6;
+    const state = (m) => (S.held.has(m) ? C.purple : S.autoMidis.has(m) ? C.teal : S.hintMidis.has(m) ? 'hint' : null);
+    const felt = 4;
+    // brancas
+    for (const m of whites) {
+      const x = xw.get(m);
+      const st = state(m);
+      const g = ctx.createLinearGradient(0, felt, 0, h);
+      if (st && st !== 'hint') {
+        g.addColorStop(0, st);
+        g.addColorStop(1, alpha(st, 0.75));
+      } else {
+        g.addColorStop(0, '#f2f4f7');
+        g.addColorStop(0.85, '#ffffff');
+        g.addColorStop(1, '#e6e9ee');
+      }
+      ctx.fillStyle = g;
+      rrect(ctx, x + 0.5, felt - 4, ww - 1, h - felt + 3, 4);
+      ctx.fill();
+      ctx.strokeStyle = '#c4cad3';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      if (st === 'hint') {
+        ctx.fillStyle = alpha(C.blue, 0.22 + 0.18 * (0.5 + 0.5 * Math.sin(S.now * 8)));
+        rrect(ctx, x + 1, felt, ww - 2, h - felt - 1, 4);
+        ctx.fill();
+      }
+      const on = st && st !== 'hint';
+      const kl = S.keyLabel(m);
+      if (kl && ww > 15) label(ctx, kl, x + ww / 2, h - 7, on ? '#fff' : '#3a4250', Math.min(11, ww * 0.42), 700, 'center');
+      if (m % 12 === 0 && ww > 13) label(ctx, S.noteName(m), x + ww / 2, h - 22, on ? '#fff' : '#8a93a2', Math.min(10, ww * 0.36), 500, 'center');
+    }
+    // pretas
+    for (let m = lo; m <= hi; m++) {
+      if (!util.isBlack(m) || !xw.has(m - 1)) continue;
+      const x = xw.get(m - 1) + ww - bw / 2;
+      blacks.push({ m, x, w: bw, h: bh });
+      const st = state(m);
+      const g = ctx.createLinearGradient(0, 0, 0, bh);
+      if (st && st !== 'hint') {
+        g.addColorStop(0, st);
+        g.addColorStop(1, alpha(st, 0.8));
+      } else {
+        g.addColorStop(0, '#11141a');
+        g.addColorStop(0.9, '#2b303b');
+        g.addColorStop(1, '#1a1e26');
+      }
+      ctx.fillStyle = g;
+      rrect(ctx, x, felt - 4, bw, bh + 4 - felt + 4, 3);
+      ctx.fill();
+      if (st === 'hint') {
+        ctx.strokeStyle = C.blue;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      const kl = S.keyLabel(m);
+      if (kl && bw > 14) label(ctx, kl, x + bw / 2, bh - 4, '#e8ebf1', Math.min(10, bw * 0.42), 600, 'center');
+    }
+    // feltro
+    ctx.fillStyle = C.ink;
+    ctx.fillRect(0, 0, w, felt);
+    ctx.fillStyle = alpha(C.red, 0.7);
+    ctx.fillRect(0, felt - 1.5, w, 1.5);
+    p.geo = { whites, xw, ww, blacks };
+  }
+
+  // ------------------------------------------------------------------ barra de progresso com mini-mapa
+  function drawProgress(p, S) {
+    const { ctx, w, h } = p;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = C.panel2;
+    rrect(ctx, 0.5, 0.5, w - 1, h - 1, 6);
+    ctx.fill();
+    ctx.strokeStyle = C.line;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    if (!S.song) {
+      label(ctx, 'MODO LIVRE — escolha uma música na lista para aprender', w / 2, h / 2 + 4, C.muted, 10.5, 500, 'center');
+      return;
+    }
+    const dur = Math.max(1, S.song.duration);
+    const [lo, hi] = S.song.range;
+    const span = Math.max(12, hi - lo + 1);
+    for (const n of S.notes) {
+      ctx.fillStyle = n.judge === 'miss' ? C.red : n.hand === 'L' ? C.blue : C.teal;
+      ctx.globalAlpha = 0.75;
+      ctx.fillRect(4 + (n.time / dur) * (w - 8), h - 4 - ((n.midi - lo + 0.5) / span) * (h - 8) - 1, Math.max(1.5, (n.duration / dur) * (w - 8)), 2);
+    }
+    ctx.globalAlpha = 1;
+    const x = 4 + (util.clamp(S.clock, 0, dur) / dur) * (w - 8);
+    ctx.fillStyle = alpha(C.blue, 0.13);
+    rrect(ctx, 1, 1, Math.max(0, x - 1), h - 2, 6);
+    ctx.fill();
+    ctx.fillStyle = C.ink;
+    ctx.fillRect(x - 1, 2, 2, h - 4);
   }
 
   const panels = {};
@@ -793,7 +969,7 @@
     MONO,
     init(map) {
       readColors();
-      const fns = { dial: drawDial, roll: drawRoll, wave: drawWave, scope: drawScope, spec: drawSpectrum, vector: drawVector, map: drawMap, gram: drawGram, highway: drawHighway };
+      const fns = { dial: drawDial, roll: drawRoll, wave: drawWave, scope: drawScope, spec: drawSpectrum, vector: drawVector, map: drawMap, gram: drawGram, highway: drawHighway, piano: drawPiano, progress: drawProgress };
       for (const [k, cv] of Object.entries(map)) if (cv && fns[k]) panels[k] = new Panel(cv, fns[k]);
       bus.on('theme', () => {
         readColors();
@@ -815,6 +991,7 @@
     },
     panels,
     readColors,
+    burst,
   };
   PN.visuals = visuals;
 })();

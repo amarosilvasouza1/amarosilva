@@ -7,7 +7,18 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = util.escapeHtml;
 
-  const settings = Object.assign({ theme: null, names: 'letters', lookahead: 2.4, keyOnNotes: true, focus: false }, store.get('settings', {}));
+  const settings = Object.assign(
+    {
+      theme: null,
+      names: /^pt/i.test(navigator.language || '') ? 'solfege' : 'letters',
+      lookahead: 2.4,
+      keyOnNotes: true,
+      focus: false,
+      // celular/tablet sem teclado: começa com o desenho do teclado recolhido
+      kbCollapsed: !!(window.matchMedia && matchMedia('(pointer: coarse)').matches && window.innerWidth < 920),
+    },
+    store.get('settings', {})
+  );
   const saveSettings = () => store.set('settings', settings);
 
   // ------------------------------------------------------------------ utilidades de UI
@@ -100,74 +111,109 @@
     true
   );
 
-  // ------------------------------------------------------------------ teclas na tela (keycaps)
-  const keycapsEl = $('#keycaps');
+  // ------------------------------------------------------------------ teclado do computador desenhado
+  const kbEl = $('#kb');
   const previewEl = $('#keycapsPreview');
-  let midiEls = new Map(); // midi -> [el] (teclado principal)
+  let midiEls = new Map(); // midi -> [el]
+  let codeEls = new Map(); // code -> [el]
   const pressedCount = new Map();
 
-  function buildKeycaps(container, withSpace) {
-    const L = keymap.LAYOUTS[keymap.layout];
-    container.innerHTML = '';
-    let maxUnits = 0;
-    for (const r of L.rows) {
-      const row = document.createElement('div');
-      row.className = 'kc-row';
-      if (r.off) {
-        const pad = document.createElement('span');
-        pad.className = 'kc-pad';
-        pad.style.width = 'calc(var(--u) * ' + r.off + ' - 5px)';
-        row.appendChild(pad);
-      }
-      for (const code of r.keys) {
-        const b = document.createElement('button');
-        b.className = 'kc';
-        b.type = 'button';
-        b.dataset.code = code;
-        b.innerHTML = '<span class="kc-note"></span><span class="kc-key"></span><span class="kc-alt"></span>';
-        row.appendChild(b);
-      }
-      maxUnits = Math.max(maxUnits, r.off + r.keys.length);
-      container.appendChild(row);
+  const FN_KEY = {
+    Backquote: null, Backspace: '⌫ APAGAR', Tab: 'TAB ⇥', CapsLock: 'CAPS', Enter: 'ENTER ⏎', ShiftLeft: '⇧ SHIFT', ShiftRight: '⇧ SHIFT',
+    ControlLeft: 'CTRL', ControlRight: 'CTRL', AltLeft: 'ALT', AltRight: 'ALT GR', Space: 'ESPAÇO', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓',
+  };
+  function fnMeaning(code) {
+    switch (code) {
+      case 'Backquote': return 'METRÔ';
+      case 'Backspace': return 'RECOMEÇAR';
+      case 'Tab': return '🎙 IA';
+      case 'Enter': return '▶ TOCAR';
+      case 'ShiftLeft': case 'ShiftRight': return keymap.shiftMeaning();
+      case 'Space': return 'PEDAL (SUSTAIN)';
+      case 'ArrowLeft': return 'OIT −';
+      case 'ArrowRight': return 'OIT +';
+      case 'ArrowUp': return 'VEL +';
+      case 'ArrowDown': return 'VEL −';
+      default: return '';
     }
-    if (withSpace) {
-      const row = document.createElement('div');
-      row.className = 'kc-row';
-      const b = document.createElement('button');
-      b.className = 'kc space';
-      b.type = 'button';
-      b.dataset.code = 'Space';
-      b.innerHTML = '<span class="kc-note">PEDAL (SUSTAIN)</span><span class="kc-key">ESPAÇO</span>';
-      row.appendChild(b);
-      container.appendChild(row);
-    }
-    container._maxUnits = maxUnits;
-    labelKeycaps(container);
-    sizeKeycaps(container);
   }
 
-  function sizeKeycaps(c) {
-    const w = c.clientWidth || (c.parentElement && c.parentElement.clientWidth) || 800;
-    const u = util.clamp((w - 12) / ((c._maxUnits || 13) + 0.4), 30, 64);
+  function makeKey(spec) {
+    if (!spec) {
+      const g = document.createElement('span');
+      g.className = 'kc ghost';
+      return g;
+    }
+    const [code, w, extra] = spec;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'kc' + (extra === 'tail' ? ' tail' : '');
+    b.dataset.code = code;
+    b.style.setProperty('--w', w);
+    b.innerHTML = '<span class="kc-note"></span><span class="kc-key"></span>';
+    return b;
+  }
+
+  function buildKb(container) {
+    container.innerHTML = '';
+    const main = document.createElement('div');
+    main.className = 'kb-main';
+    for (const row of keymap.displayRows(keymap.layout)) {
+      const r = document.createElement('div');
+      r.className = 'kb-row';
+      row.forEach((k) => r.appendChild(makeKey(k)));
+      main.appendChild(r);
+    }
+    const arrows = document.createElement('div');
+    arrows.className = 'kb-arrows';
+    for (const row of keymap.ARROWS) {
+      const r = document.createElement('div');
+      r.className = 'kb-row';
+      row.forEach((k) => r.appendChild(makeKey(k)));
+      arrows.appendChild(r);
+    }
+    container.appendChild(main);
+    container.appendChild(arrows);
+    labelKb(container);
+    sizeKb(container);
+  }
+
+  function sizeKb(c) {
+    const w = c.clientWidth || (c.parentElement && c.parentElement.clientWidth) || 900;
+    const u = util.clamp((w - 8) / 19, 30, 62);
     c.style.setProperty('--u', u + 'px');
   }
 
-  function labelKeycaps(c) {
+  function labelKb(c) {
     const preset = keymap.PRESETS[keymap.preset];
-    const index = new Map();
-    for (const b of $$('.kc', c)) {
+    const mIndex = new Map();
+    const cIndex = new Map();
+    const add = (map, k, el) => {
+      if (!map.has(k)) map.set(k, []);
+      map.get(k).push(el);
+    };
+    for (const b of $$('.kc[data-code]', c)) {
       const code = b.dataset.code;
-      if (code === 'Space') continue;
-      const m = keymap.map[code];
+      add(cIndex, code, b);
       const noteEl = b.querySelector('.kc-note');
       const keyEl = b.querySelector('.kc-key');
-      const altEl = b.querySelector('.kc-alt');
-      keyEl.textContent = keymap.label(code);
-      altEl.textContent = '';
-      b.classList.remove('black', 'c-note', 'empty');
+      b.classList.remove('black', 'c-note', 'empty', 'fn', 'useful');
       delete b.dataset.midi;
+      const m = keymap.map[code];
+      if (m == null && (code in FN_KEY || b.style.getPropertyValue('--w') !== '1')) {
+        // tecla de função
+        b.classList.add('fn');
+        const meaning = b.classList.contains('tail') ? '' : fnMeaning(code);
+        noteEl.textContent = meaning;
+        keyEl.textContent = FN_KEY[code] || keymap.label(code);
+        if (meaning) b.classList.add('useful');
+        if (code === 'Space') b.classList.toggle('sustain-on', audio.sustain);
+        continue;
+      }
+      keyEl.textContent = keymap.label(code);
       if (preset.octaveKeys && preset.octaveKeys[code] != null) {
         noteEl.textContent = preset.octaveKeys[code] < 0 ? 'OIT −' : 'OIT +';
+        b.classList.add('fn', 'useful');
         continue;
       }
       if (m == null) {
@@ -179,17 +225,13 @@
       noteEl.textContent = noteName(m);
       if (util.isBlack(m)) b.classList.add('black');
       if (m % 12 === 0) b.classList.add('c-note');
-      const add = (mm) => {
-        if (!index.has(mm)) index.set(mm, []);
-        index.get(mm).push(b);
-      };
-      add(m);
-      if (preset.shiftSharp && util.isBlack(m + 1)) {
-        altEl.textContent = '⇧' + noteName(m + 1).replace(/\d+$/, '');
-        add(m + 1);
-      }
+      add(mIndex, m, b);
+      if (preset.shiftSharp && util.isBlack(m + 1)) add(mIndex, m + 1, b);
     }
-    if (c === keycapsEl) midiEls = index;
+    if (c === kbEl) {
+      midiEls = mIndex;
+      codeEls = cIndex;
+    }
   }
 
   function markKey(midi, on) {
@@ -214,19 +256,39 @@
     prevAuto = auto;
   }
 
-  function bindKeycapPointer(container) {
+  // qualquer tecla apertada "afunda" no desenho
+  function pressVisual(code, down) {
+    for (const el of codeEls.get(code) || []) el.classList.toggle('down', down);
+    if ($('#mKeys').classList.contains('open')) $$('.kc[data-code="' + code + '"]', previewEl).forEach((el) => el.classList.toggle('down', down));
+  }
+  window.addEventListener('keydown', (e) => {
+    const t = e.target;
+    const tag = (t && t.tagName ? t.tagName : '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.ctrlKey || e.metaKey) return;
+    pressVisual(e.code, true);
+  });
+  window.addEventListener('keyup', (e) => pressVisual(e.code, false));
+  window.addEventListener('blur', () => $$('.kc.down').forEach((el) => el.classList.remove('down')));
+
+  function bindKbPointer(container) {
     const active = new Map(); // pointerId -> midi | 'sustain'
     container.addEventListener('pointerdown', (e) => {
       const b = e.target.closest('.kc');
       if (!b) return;
       e.preventDefault();
-      if (b.dataset.code === 'Space') {
-        active.set(e.pointerId, 'sustain');
-        bus.emit('key:special', 'sustain', true);
-      } else if (b.dataset.midi) {
+      const code = b.dataset.code;
+      if (b.dataset.midi) {
         const m = Number(b.dataset.midi);
         active.set(e.pointerId, m);
         noteOn(m, keymap.velocity);
+      } else if (code === 'Space') {
+        active.set(e.pointerId, 'sustain');
+        bus.emit('key:special', 'sustain', true);
+      } else {
+        const map = { Enter: 'playPause', Backspace: 'restart', Tab: 'mic', Backquote: 'metronome', ArrowLeft: 'octDown', ArrowRight: 'octUp', ArrowUp: 'speedUp', ArrowDown: 'speedDown' };
+        if (map[code]) bus.emit('key:special', map[code], true);
+        const oct = keymap.PRESETS[keymap.preset].octaveKeys;
+        if (oct && oct[code] != null) keymap.shiftOctave(oct[code]);
       }
       try {
         b.setPointerCapture(e.pointerId);
@@ -243,11 +305,20 @@
     container.addEventListener('pointercancel', end);
   }
 
+  const PRESET_HINT = {
+    full: 'CADA FILEIRA É UMA OITAVA · Q = DÓ CENTRAL · SEGURE SHIFT PARA SUBIR UMA OITAVA',
+    tracker: 'Z X C V B N M = TECLAS BRANCAS · S D G H J = PRETAS · Q W E R T Y U = OITAVA DE CIMA',
+    vp: 'NÚMEROS E LETRAS = TECLAS BRANCAS · SEGURE SHIFT PARA O SUSTENIDO',
+    garage: 'A S D F G H J K L = BRANCAS · W E T Y U O P = PRETAS · Z / X MUDAM A OITAVA',
+    custom: 'SEU MAPA PERSONALIZADO · TROQUE AS TECLAS EM "TROCAR MAPA"',
+  };
+
   // ------------------------------------------------------------------ notas
   const recentNotes = [];
   function noteOn(m, vel) {
     audio.noteOn(m, vel);
-    player.userOn(m, vel);
+    const r = player.userOn(m, vel);
+    if (!r) visuals.burst(m, 'note');
     recorder.on(m, vel);
     markKey(m, true);
     recentNotes.push({ m, t: performance.now() });
@@ -264,13 +335,20 @@
   bus.on('midi:on', (m, v) => noteOn(m, v));
   bus.on('midi:off', (m) => noteOff(m));
   bus.on('midi:sustain', (on) => bus.emit('key:special', 'sustain', on));
+  bus.on('player:judge', (kind, midi) => visuals.burst(midi, kind));
 
   bus.on('key:special', (name, down) => {
     switch (name) {
       case 'sustain':
         audio.setSustain(down);
         $('#sustainInd').classList.toggle('on', down);
-        $$('.kc.space').forEach((el) => el.classList.toggle('on', down));
+        $$('.kc[data-code="Space"]').forEach((el) => el.classList.toggle('sustain-on', down));
+        break;
+      case 'metronome':
+        if (down) {
+          setMetronome(!player.metronome);
+          toast('Metrônomo ' + (player.metronome ? 'ligado' : 'desligado'));
+        }
         break;
       case 'octDown':
         keymap.shiftOctave(-1);
@@ -293,7 +371,7 @@
         else if (player.song) player.pause();
         break;
       case 'restart':
-        player.restart();
+        player.restart(false);
         break;
       case 'mic':
         toggleMic();
@@ -361,9 +439,10 @@
 
   // ------------------------------------------------------------------ cabeçalho e transporte
   function loadSong(song, mode, opts) {
+    if (!song) return;
     audio.ensure();
     closeAllModals();
-    player.load(song, mode, opts);
+    player.load(song, mode || 'practice', opts);
   }
 
   function setSpeed(s) {
@@ -376,20 +455,53 @@
 
   function updateHeader() {
     const s = player.song;
-    $('#songTitle').textContent = s ? s.title.toUpperCase() : 'MODO LIVRE';
+    $('#songTitle').textContent = s ? s.title : 'Modo livre';
     $('#songMeta').textContent = s
       ? [s.composer, PN.MODES[player.mode].name, util.formatTime(s.duration)].filter(Boolean).join(' · ')
-      : 'toque com o teclado do computador · escolha uma música em ♫ MÚSICAS';
-    $$('#modeSeg button').forEach((b) => b.classList.toggle('on', !!s && b.dataset.mode === player.mode));
-    const hk = player.hands.R && player.hands.L ? 'LR' : player.hands.R ? 'R' : 'L';
-    $$('#handSeg button').forEach((b) => b.classList.toggle('on', b.dataset.hand === hk));
-    $('#handSeg').classList.toggle('disabled', !s || player.mode === 'watch');
+      : 'toque à vontade · escolha uma música na lista para aprender';
+    $$('#modeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.mode === player.mode));
     updatePlayBtn();
+    updateReady();
+    renderSidebar();
   }
   function updatePlayBtn() {
     const playing = player.state === 'playing' || player.state === 'waiting';
     $('#btnPlay').textContent = playing ? '❚❚' : '▶';
+    updateReady();
   }
+
+  // cartão "COMEÇAR"
+  function updateReady() {
+    const s = player.song;
+    const show = !!s && player.state === 'ready';
+    $('#readyCard').classList.toggle('hidden', !show);
+    if (!show) return;
+    $('#rcMode').textContent = PN.MODES[player.mode].name;
+    $('#rcTitle').textContent = s.title;
+    $('#rcSub').textContent = [s.composer, util.formatTime(s.duration), '●'.repeat(s.difficulty) + '○'.repeat(5 - s.difficulty)].filter(Boolean).join(' · ');
+    $('#rcExplain').textContent = PN.MODES[player.mode].explain;
+    $$('#rcModes button').forEach((b) => b.classList.toggle('on', b.dataset.mode === player.mode));
+    const hk = player.hands.R && player.hands.L ? 'LR' : player.hands.R ? 'R' : 'L';
+    $$('#rcHands button').forEach((b) => b.classList.toggle('on', b.dataset.hand === hk));
+    $('#rcHandsRow').classList.toggle('hidden', player.mode === 'watch' || !s.hands.L || !s.hands.R);
+    $('#rcSpeed').textContent = Math.round(player.speed * 100) + '%';
+  }
+  $$('#rcModes button').forEach((b) => (b.onclick = () => player.song && loadSong(player.song, b.dataset.mode)));
+  $$('#rcHands button').forEach(
+    (b) =>
+      (b.onclick = () => {
+        player.setHands(b.dataset.hand);
+        updateReady();
+      })
+  );
+  $('#rcSlower').onclick = () => setSpeed(player.speed - 0.1);
+  $('#rcFaster').onclick = () => setSpeed(player.speed + 0.1);
+  $('#rcStart').onclick = () => {
+    audio.ensure();
+    player.play();
+  };
+  bus.on('player:speed', updateReady);
+
   bus.on('player:load', () => {
     updateHeader();
     closeModal('mResults');
@@ -397,9 +509,9 @@
   bus.on('player:state', updatePlayBtn);
   bus.on('player:finish', (res) => {
     if (res.mode === 'watch') {
-      toast('Fim! Agora é sua vez?', null, [
-        { label: 'PRATICAR', fn: () => loadSong(res.song, 'practice') },
-        { label: 'DESAFIO', fn: () => loadSong(res.song, 'challenge') },
+      toast('Fim! Agora é a sua vez?', null, [
+        { label: 'APRENDER', fn: () => loadSong(res.song, 'practice') },
+        { label: 'JOGAR', fn: () => loadSong(res.song, 'challenge') },
       ]);
       return;
     }
@@ -411,28 +523,24 @@
     if (player.song) player.toggle();
     else openLibrary();
   };
-  $('#btnRestart').onclick = () => player.restart();
+  $('#btnRestart').onclick = () => player.restart(false);
   $$('#modeSeg button').forEach(
     (b) =>
       (b.onclick = () => {
+        const mode = b.dataset.mode;
+        if (mode === 'free') return player.load(null);
         if (!player.song) {
-          toast('Escolha uma música primeiro.');
-          openLibrary();
+          toast('Escolha uma música na lista ao lado. ♫');
+          if (window.innerWidth <= 920) openLibrary('all');
+          sbFilterPending = mode;
           return;
         }
-        loadSong(player.song, b.dataset.mode);
-      })
-  );
-  $$('#handSeg button').forEach(
-    (b) =>
-      (b.onclick = () => {
-        player.setHands(b.dataset.hand);
-        updateHeader();
+        loadSong(player.song, mode);
       })
   );
   $('#speed').oninput = (e) => setSpeed(Number(e.target.value) / 100);
   $('#btnRecord').onclick = () => recorder.toggle();
-  $('#btnLibrary').onclick = () => openLibrary();
+  $('#btnSongs').onclick = () => openLibrary('all');
   $('#btnKeys').onclick = () => openKeys();
   $('#btnSettings').onclick = () => openSettings('sound');
   $('#btnAI').onclick = () => toggleChat();
@@ -473,13 +581,36 @@
     player.seek(ratio * player.song.duration);
   }
   $('#progress').addEventListener('pointerdown', (e) => seekFromEvent(e, e.currentTarget));
-  $('#cvMap').addEventListener('pointerdown', (e) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    const pad = 8;
-    if (!player.song) return;
-    if (player.mode === 'challenge') return toast('No desafio não dá para pular.');
-    player.seek(util.clamp((e.clientX - r.left - pad) / (r.width - pad * 2), 0, 1) * player.song.duration);
-  });
+
+  // tocar clicando no piano desenhado
+  (function () {
+    const cv = $('#cvPiano');
+    const active = new Map();
+    cv.addEventListener('pointerdown', (e) => {
+      const p = visuals.panels.piano;
+      if (!p || !p.geo) return;
+      const r = cv.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      let m = null;
+      for (const bk of p.geo.blacks) if (x >= bk.x && x <= bk.x + bk.w && y <= bk.h) m = bk.m;
+      if (m == null) m = p.geo.whites[Math.floor(x / p.geo.ww)];
+      if (m == null) return;
+      active.set(e.pointerId, m);
+      noteOn(m, keymap.velocity);
+      try {
+        cv.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    });
+    const end = (e) => {
+      const m = active.get(e.pointerId);
+      if (m == null) return;
+      active.delete(e.pointerId);
+      noteOff(m);
+    };
+    cv.addEventListener('pointerup', end);
+    cv.addEventListener('pointercancel', end);
+  })();
 
   // tocar clicando/tocando nas faixas da pista
   (function () {
@@ -512,6 +643,72 @@
     cv.addEventListener('pointercancel', end);
   })();
 
+  // ------------------------------------------------------------------ lista de músicas (lateral)
+  const SOURCE_BADGE = { midi: 'MIDI', ai: 'IA', sheet: 'LETRAS', rec: 'GRAVAÇÃO', notation: 'NOTAÇÃO' };
+  let sbFilter = 'all';
+  let sbFilterPending = null;
+  const CAT_HUE = { facil: 178, festa: 300, classica: 222 };
+  function coverFor(s) {
+    const hue = s.source === 'builtin' ? CAT_HUE[s.cat] || 210 : s.source === 'ai' ? 255 : 32;
+    const clean = s.title.replace(/^Aquecimento:\s*/i, '').replace(/^[^A-Za-zÀ-ú]+/, '');
+    const letter = (clean[0] || '♪').toUpperCase();
+    return '<span class="cover" style="--h:' + hue + '">' + esc(letter) + '</span>';
+  }
+  function renderSidebar() {
+    const el = $('#songList');
+    if (!el) return;
+    const q = $('#sbSearch').value.trim().toLowerCase();
+    let list = songs.library.all();
+    if (sbFilter === 'mine') list = list.filter((s) => s.source !== 'builtin');
+    else if (sbFilter !== 'all') list = list.filter((s) => s.cat === sbFilter);
+    if (q) list = list.filter((s) => (s.title + ' ' + (s.composer || '')).toLowerCase().includes(q));
+    if (!list.length) {
+      el.innerHTML = '<div class="lib-empty">' + (sbFilter === 'mine' ? 'Nada aqui ainda. Importe um MIDI, grave algo ou peça para a IA. ✦' : 'Nenhuma música encontrada.') + '</div>';
+      return;
+    }
+    const cur = player.song && player.song.id;
+    el.innerHTML = list
+      .map((s) => {
+        const best = PN.Player.best(s.id);
+        const b = best.challenge || best.practice;
+        const badge = SOURCE_BADGE[s.source] ? '<span class="badge' + (s.source === 'ai' ? ' ai' : '') + '">' + SOURCE_BADGE[s.source] + '</span>' : '';
+        return (
+          '<button class="song' + (s.id === cur ? ' on' : '') + '" data-id="' + esc(s.id) + '">' + coverFor(s) +
+          '<span style="min-width:0"><div class="t">' + esc(s.title) + badge + '</div><div class="s">' + esc(s.composer || '—') + '</div>' +
+          '<div class="m"><span class="dots">' + '●'.repeat(s.difficulty) + '<i>' + '●'.repeat(5 - s.difficulty) + '</i></span><span>' + util.formatTime(s.duration) + '</span>' +
+          (b ? '<span class="best">' + '★'.repeat(b.stars) + '</span>' : '') + '</div></span></button>'
+        );
+      })
+      .join('');
+  }
+  $('#songList').addEventListener('click', (e) => {
+    const b = e.target.closest('.song');
+    if (!b) return;
+    const song = songs.library.get(b.dataset.id);
+    const mode = sbFilterPending || (player.song && player.mode !== 'free' ? player.mode : 'practice');
+    sbFilterPending = null;
+    loadSong(song, mode);
+  });
+  $$('#sbChips button').forEach(
+    (b) =>
+      (b.onclick = () => {
+        sbFilter = b.dataset.f;
+        $$('#sbChips button').forEach((x) => x.classList.toggle('on', x === b));
+        renderSidebar();
+      })
+  );
+  $('#sbSearch').oninput = util.debounce(renderSidebar, 100);
+  $('#sbImport').onclick = () => openLibrary('import');
+  $('#sbAskAi').onclick = () => {
+    openChat();
+    $('#chatText').value = 'Adiciona uma música fácil para eu aprender: ';
+    setTimeout(() => {
+      $('#chatText').focus();
+      autoGrow();
+    }, 60);
+  };
+  bus.on('library', renderSidebar);
+
   // ------------------------------------------------------------------ biblioteca
   let libTab = 'all';
   function openLibrary(tab) {
@@ -535,7 +732,6 @@
   );
   $('#libSearch').oninput = util.debounce(renderLibrary, 120);
 
-  const SOURCE_BADGE = { midi: 'MIDI', ai: 'IA', sheet: 'LETRAS', rec: 'GRAVAÇÃO', notation: 'NOTAÇÃO' };
   function renderLibrary() {
     const q = $('#libSearch').value.trim().toLowerCase();
     let list = songs.library.all();
@@ -560,7 +756,7 @@
           '<div style="min-width:0"><div class="lib-title">' + esc(s.title) + badge + '</div><div class="lib-sub">' + esc(s.composer || '') + (s.composer ? ' · ' : '') + s.notes.length + ' notas</div></div>' +
           '<span class="lib-dur">' + util.formatTime(s.duration) + '</span>' +
           '<span class="lib-best">' + bestTxt + '</span>' +
-          '<div class="lib-actions"><button class="tb" data-act="watch">ASSISTIR</button><button class="tb" data-act="practice">PRATICAR</button><button class="tb" data-act="challenge">DESAFIO</button>' +
+          '<div class="lib-actions"><button class="tb" data-act="watch">OUVIR</button><button class="tb" data-act="practice">APRENDER</button><button class="tb" data-act="challenge">JOGAR</button>' +
           (mine ? '<button class="tb" data-act="dl" title="Baixar .mid">⬇</button><button class="tb" data-act="del" title="Apagar">✕</button>' : '') +
           '</div></div>'
         );
@@ -607,8 +803,8 @@
     }
     if (last) {
       toast('"' + last.title + '" adicionada (' + last.notes.length + ' notas).', null, [
-        { label: 'ASSISTIR', fn: () => loadSong(last, 'watch') },
-        { label: 'PRATICAR', fn: () => loadSong(last, 'practice') },
+        { label: 'OUVIR', fn: () => loadSong(last, 'watch') },
+        { label: 'APRENDER', fn: () => loadSong(last, 'practice') },
       ]);
       if ($('#mLibrary').classList.contains('open')) {
         setLibTab('mine');
@@ -715,7 +911,7 @@
     $('#kbVel').value = Math.round(keymap.velocity * 100);
     $('#kbVelVal').textContent = Math.round(keymap.velocity * 100) + '%';
     $('#kbNumpad').checked = keymap.numpadBass;
-    buildKeycaps(previewEl, false);
+    buildKb(previewEl);
     renderStrip();
   }
   $('#presetGrid').addEventListener('click', (e) => {
@@ -746,10 +942,18 @@
     }
   };
   $('#kbReset').onclick = () => {
-    keymap.setPreset('tracker');
-    toast('Mapa padrão restaurado.');
+    keymap.setPreset('full');
+    toast('Mapa padrão (teclado inteiro) restaurado.');
   };
-  bindKeycapPointer(previewEl);
+  bindKbPointer(previewEl);
+  $('#kbChange').onclick = () => openKeys();
+  $('#kbToggle').onclick = () => {
+    settings.kbCollapsed = !settings.kbCollapsed;
+    saveSettings();
+    $('#keysArea').classList.toggle('collapsed', settings.kbCollapsed);
+    $('#kbToggle').textContent = settings.kbCollapsed ? '▴ MOSTRAR' : '▾ OCULTAR';
+    if (!settings.kbCollapsed) sizeKb(kbEl);
+  };
 
   function renderStrip() {
     const lo = 36;
@@ -815,14 +1019,14 @@
   });
 
   bus.on('keymap', () => {
-    labelKeycaps(keycapsEl);
-    if (keycapsEl._layout !== keymap.layout) {
-      buildKeycaps(keycapsEl, true);
-      keycapsEl._layout = keymap.layout;
-    }
+    if (kbEl._layout !== keymap.layout) {
+      buildKb(kbEl);
+      kbEl._layout = keymap.layout;
+    } else labelKb(kbEl);
     prevHint = new Set();
     prevAuto = new Set();
-    $('#presetName').textContent = 'TECLADO: ' + keymap.PRESETS[keymap.preset].name.toUpperCase() + ' · ' + keymap.LAYOUTS[keymap.layout].name.split(' (')[0];
+    $('#presetName').textContent = 'SEU TECLADO: ' + keymap.PRESETS[keymap.preset].name.toUpperCase() + ' · ' + keymap.LAYOUTS[keymap.layout].name.split(' (')[0];
+    $('#keysHint').textContent = PRESET_HINT[keymap.preset] || '';
     $('#octInd').textContent = 'OITAVA ' + (keymap.octave > 0 ? '+' : '') + keymap.octave;
     player.refold();
     if ($('#mKeys').classList.contains('open')) renderKeysModal();
@@ -1166,8 +1370,8 @@
       if (i.open_mode && i.open_mode !== 'none') loadSong(song, i.open_mode);
       else
         toast('✦ IA adicionou "' + song.title + '"', null, [
-          { label: 'ASSISTIR', fn: () => loadSong(song, 'watch') },
-          { label: 'PRATICAR', fn: () => loadSong(song, 'practice') },
+          { label: 'OUVIR', fn: () => loadSong(song, 'watch') },
+          { label: 'APRENDER', fn: () => loadSong(song, 'practice') },
         ]);
       return { ok: true, id: song.id, notas: song.notes.length, duracao_s: Math.round(song.duration * 10) / 10, avisos: (song.errors || []).slice(0, 5) };
     },
@@ -1224,7 +1428,7 @@
   // ------------------------------------------------------------------ resultado
   function showResults(res) {
     const s = res.stats;
-    $('#resTitle').textContent = (res.mode === 'challenge' ? 'DESAFIO' : 'PRÁTICA') + ' — ' + res.song.title.toUpperCase();
+    $('#resTitle').textContent = (res.mode === 'challenge' ? 'JOGAR' : 'APRENDER') + ' — ' + res.song.title.toUpperCase();
     const grid =
       res.mode === 'challenge'
         ? [['PERFEITO', s.perfect], ['ÓTIMO', s.great], ['BOM', s.good], ['ERROU', s.miss], ['NOTA ERRADA', s.wrong], ['MAIOR COMBO', s.maxCombo]]
@@ -1238,10 +1442,10 @@
       '<div class="row end">' +
       '<button class="tb" id="resAi">✦ PEDIR DICA À IA</button>' +
       '<button class="tb" id="resLib">MÚSICAS</button>' +
-      (res.mode === 'practice' ? '<button class="tb" id="resNext">IR PARA O DESAFIO</button>' : '') +
+      (res.mode === 'practice' ? '<button class="tb" id="resNext">AGORA, JOGAR ▸</button>' : '') +
       '<button class="tb" id="resAgain" style="background:var(--ink);color:var(--panel)">REPETIR</button></div>';
     openModal('mResults');
-    $('#resAgain').onclick = () => loadSong(res.song, res.mode);
+    $('#resAgain').onclick = () => loadSong(res.song, res.mode, { autostart: true });
     $('#resLib').onclick = () => {
       closeModal('mResults');
       openLibrary();
@@ -1276,10 +1480,8 @@
     if (s) {
       const t = util.clamp(player.t, 0, s.duration);
       $('#timeText').textContent = util.formatTime(t) + ' / ' + util.formatTime(s.duration);
-      $('#progressBar').style.width = (t / Math.max(1, s.duration)) * 100 + '%';
     } else {
       $('#timeText').textContent = util.formatTime(player.wall()) + ' LIVRE';
-      $('#progressBar').style.width = '0%';
     }
     if (recorder.active) $('#recInd').textContent = '● REC ' + util.formatTime(recorder.now());
   }
@@ -1302,7 +1504,25 @@
     bpmAt: () => player.freeBpm,
   };
 
-  function buildState() {
+  function pianoRange(song) {
+    const vals = Object.values(keymap.map);
+    let lo = vals.length ? Math.min(...vals) : 48;
+    let hi = vals.length ? Math.max(...vals) : 83;
+    if (song) {
+      lo = Math.min(lo, song.range[0]);
+      hi = Math.max(hi, song.range[1]);
+    }
+    lo = Math.max(21, lo - (lo % 12));
+    hi = Math.min(108, hi + (11 - (hi % 12)));
+    return [lo, hi];
+  }
+  const MODE_HINT = {
+    watch: 'OUÇA E VEJA QUAIS TECLAS APERTAR',
+    practice: 'TOQUE A TECLA QUE PISCA — A MÚSICA ESPERA VOCÊ',
+    challenge: 'APERTE QUANDO A NOTA ENCOSTAR NA LINHA',
+  };
+
+  function buildState(dt) {
     const song = player.song;
     const t = player.t;
     const beats = song ? player._beatsCache : freeBeats;
@@ -1400,6 +1620,10 @@
       trackText: song ? (player.mode === 'watch' ? 'TODAS' : hk) : 'TECLADO ' + keymap.PRESETS[keymap.preset].name.toUpperCase(),
       waitingText,
       countdown,
+      pianoRange: pianoRange(song),
+      hint: song ? MODE_HINT[player.mode] || '' : PRESET_HINT[keymap.preset] || '',
+      dt: dt || 0,
+      now: performance.now() / 1000,
     };
   }
 
@@ -1409,7 +1633,7 @@
     const dt = Math.max(0, (now - last) / 1000);
     last = now;
     player.update(dt);
-    const S = buildState();
+    const S = buildState(Math.min(dt, 0.1));
     visuals.frame(S);
     updateKeyStates(S.hintMidis, S.autoMidis);
     if (++frameNo % 6 === 0) updateFooter();
@@ -1424,9 +1648,11 @@
         if (!settings.theme) applyTheme();
       });
     keymap.init();
-    buildKeycaps(keycapsEl, true);
-    keycapsEl._layout = keymap.layout;
-    bindKeycapPointer(keycapsEl);
+    buildKb(kbEl);
+    kbEl._layout = keymap.layout;
+    bindKbPointer(kbEl);
+    $('#keysArea').classList.toggle('collapsed', !!settings.kbCollapsed);
+    $('#kbToggle').textContent = settings.kbCollapsed ? '▴ MOSTRAR' : '▾ OCULTAR';
     visuals.init({
       highway: $('#cvHighway'),
       dial: $('#cvDial'),
@@ -1435,7 +1661,8 @@
       scope: $('#cvScope'),
       spec: $('#cvSpec'),
       vector: $('#cvVector'),
-      map: $('#cvMap'),
+      piano: $('#cvPiano'),
+      progress: $('#cvProgress'),
       gram: $('#cvGram'),
     });
     document.body.classList.toggle('focus', !!settings.focus);
@@ -1446,15 +1673,24 @@
     updateAiLabel();
     $('#aiSpeak').checked = !!ai.cfg.speak;
     window.addEventListener('resize', () => {
-      sizeKeycaps(keycapsEl);
-      if ($('#mKeys').classList.contains('open')) sizeKeycaps(previewEl);
+      sizeKb(kbEl);
+      if ($('#mKeys').classList.contains('open')) sizeKb(previewEl);
     });
-    $('#startBtn').onclick = () => {
+    const closeSplash = () => {
       audio.ensure();
       midi.input.init();
       $('#splash').classList.add('hidden');
-      sizeKeycaps(keycapsEl);
+      sizeKb(kbEl);
     };
+    $$('#splash .choice').forEach(
+      (b) =>
+        (b.onclick = () => {
+          closeSplash();
+          const go = b.dataset.go;
+          if (go === 'learn') loadSong(songs.library.get('b-brilha'), 'practice');
+          else if (go === 'ai') toggleChat();
+        })
+    );
     // qualquer tecla também fecha a tela inicial
     window.addEventListener(
       'keydown',

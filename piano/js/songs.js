@@ -368,7 +368,75 @@
     },
   ];
 
+  const march = (pairs) => pairs.map(([r, f]) => r + ':1 ' + f + ' ' + r + ' ' + f).join(' | ');
+  BUILTIN_DEFS.push(
+    {
+      id: 'b-do-re-mi-fa',
+      title: 'Dó Ré Mi Fá',
+      composer: 'Cantiga popular',
+      difficulty: 1,
+      bpm: 100,
+      right: 'C4:0.5 D4 E4 F4 F4:1 F4:1 | C4:0.5 D4 C4 D4 D4:1 D4:1 | C4:0.5 G4 F4 E4 E4:1 E4:1 | C4:0.5 D4 E4 F4 F4:1 F4:1',
+      left: 'C3:2 F2:2 | G2:4 | C3:4 | C3:2 F2:2',
+    },
+    {
+      id: 'b-frei-martinho',
+      title: 'Frei Martinho (Frère Jacques)',
+      composer: 'Tradicional francesa',
+      difficulty: 1,
+      bpm: 112,
+      right: 'C4:1 D4 E4 C4 | C4 D4 E4 C4 | E4 F4 G4:2 | E4:1 F4 G4:2 | G4:0.5 A4 G4 F4 E4:1 C4:1 | G4:0.5 A4 G4 F4 E4:1 C4:1 | C4:1 G3 C4:2 | C4:1 G3 C4:2',
+      left: 'C3+G3:4 | C3+G3:4 | C3+G3:4 | C3+G3:4 | C3+G3:4 | C3+G3:4 | C3+G3:2 G2+D3:2 | C3+G3:4',
+    },
+    {
+      id: 'b-seu-lobato',
+      title: 'Seu Lobato Tinha um Sítio',
+      composer: 'Tradicional (Old MacDonald)',
+      difficulty: 1,
+      bpm: 120,
+      right: 'G4:1 G4 G4 D4 | E4 E4 D4:2 | B4:1 B4 A4 A4 | G4:3 D4:1 | G4:1 G4 G4 D4 | E4 E4 D4:2 | B4:1 B4 A4 A4 | G4:4',
+      left: 'G2+D3:4 | C3+G3:2 G2+D3:2 | G2+D3:2 D3+A3:2 | G2+D3:4 | G2+D3:4 | C3+G3:2 G2+D3:2 | G2+D3:2 D3+A3:2 | G2+D3:4',
+    },
+    {
+      id: 'b-noite-feliz',
+      title: 'Noite Feliz',
+      composer: 'Franz Xaver Gruber',
+      difficulty: 2,
+      bpm: 150,
+      timeSig: 6,
+      right: 'G4:1.5 A4:0.5 G4:1 E4:3 | G4:1.5 A4:0.5 G4:1 E4:3 | D5:2 D5:1 B4:3 | C5:2 C5:1 G4:3 | A4:2 A4:1 C5:1.5 B4:0.5 A4:1 | G4:1.5 A4:0.5 G4:1 E4:3 | A4:2 A4:1 C5:1.5 B4:0.5 A4:1 | G4:1.5 A4:0.5 G4:1 E4:3 | D5:2 D5:1 F5:1.5 D5:0.5 B4:1 | C5:3 E5:3 | C5:1.5 G4:0.5 E4:1 G4:1.5 F4:0.5 D4:1 | C4:6',
+      left: 'C3+G3:3 C3+G3 | C3+G3 C3+G3 | G2+D3 G2+D3 | C3+G3 C3+G3 | F2+C3 F2+C3 | C3+G3 C3+G3 | F2+C3 F2+C3 | C3+G3 C3+G3 | G2+D3 G2+D3 | C3+G3 C3+G3 | C3+G3 G2+D3 | C3+G3:6',
+    },
+    {
+      id: 'b-saints',
+      title: 'When the Saints Go Marching In',
+      composer: 'Spiritual tradicional',
+      difficulty: 2,
+      bpm: 132,
+      right: 'R:1 C4:1 E4 F4 | G4:4 | R:1 C4:1 E4 F4 | G4:4 | R:1 C4:1 E4 F4 | G4:2 E4:2 | C4:2 E4:2 | D4:4 | R:1 E4:1 E4 D4 | C4:3 C4:1 | E4:2 G4:1 G4:1 | F4:3 E4:0.5 F4:0.5 | G4:2 E4:2 | C4:2 D4:2 | C4:4',
+      left: march([['C3', 'G3'], ['C3', 'G3'], ['C3', 'G3'], ['C3', 'G3'], ['C3', 'G3'], ['C3', 'G3'], ['C3', 'G3'], ['G2', 'D3'], ['C3', 'G3'], ['C3', 'G3'], ['C3', 'E3'], ['F2', 'C3'], ['C3', 'G3'], ['G2', 'D3']]) + ' | C3+G3:4',
+    },
+    {
+      id: 'b-serenata',
+      title: 'Pequena Serenata Noturna (início)',
+      composer: 'Wolfgang Amadeus Mozart',
+      difficulty: 3,
+      bpm: 132,
+      right: repeat('G4:1 R:0.5 D4:0.5 G4:1 R:0.5 D4:0.5 | G4:0.5 D4 G4 B4 D5:2 | C5:1 R:0.5 A4:0.5 C5:1 R:0.5 A4:0.5 | C5:0.5 A4 F#4 A4 D4:2', 2) + ' | G4+B4+D5:2 R:2',
+      left: repeat('G3:1 R:0.5 D3:0.5 G3:1 R:0.5 D3:0.5 | G3:0.5 D3 G3 B3 D4:2 | C4:1 R:0.5 A3:0.5 C4:1 R:0.5 A3:0.5 | C4:0.5 A3 F#3 A3 D3:2', 2) + ' | G2+G3:2 R:2',
+    }
+  );
+
+  // Categorias para os filtros da lista
+  const CATS = {
+    'b-escala-do': 'facil', 'b-mary': 'facil', 'b-brilha': 'facil', 'b-do-re-mi-fa': 'facil', 'b-frei-martinho': 'facil', 'b-seu-lobato': 'facil',
+    'b-parabens': 'festa', 'b-jingle': 'festa', 'b-noite-feliz': 'festa', 'b-saints': 'festa',
+  };
+  for (const d of BUILTIN_DEFS) d.cat = CATS[d.id] || 'classica';
+
   const builtins = BUILTIN_DEFS.map((d) => makeSong(d));
+  builtins.forEach((b, i) => (b.cat = BUILTIN_DEFS[i].cat));
+  builtins.sort((a, b) => a.difficulty - b.difficulty || ({ facil: 0, festa: 1, classica: 2 }[a.cat] - { facil: 0, festa: 1, classica: 2 }[b.cat]));
 
   // ---------------------------------------------------------------------
   // Biblioteca do usuário (salva no navegador)

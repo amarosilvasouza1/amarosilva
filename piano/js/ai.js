@@ -72,7 +72,7 @@ As duas mãos começam juntas no tempo 0; mantenha o mesmo total de tempos nas d
     },
     {
       name: 'start_song',
-      description: 'Abre uma música da biblioteca. Modos: watch (assistir, toca sozinha), practice (praticar: espera o usuário acertar cada nota), challenge (desafio com pontos e combo).',
+      description: 'Abre uma música da biblioteca (o usuário aperta COMEÇAR/Enter para iniciar). Modos: watch (OUVIR: toca sozinha), practice (APRENDER: espera o usuário acertar cada nota), challenge (JOGAR: pontos e combo).',
       input_schema: {
         type: 'object',
         properties: {
@@ -101,7 +101,7 @@ As duas mãos começam juntas no tempo 0; mantenha o mesmo total de tempos nas d
           reverb_percent: { type: 'number', description: '0 a 100' },
           metronome: { type: 'boolean' },
           theme: { type: 'string', enum: ['claro', 'escuro'] },
-          keyboard_preset: { type: 'string', enum: ['tracker', 'vp', 'garage'], description: 'tracker = profissional (2 fileiras), vp = Virtual Piano/Roblox, garage = uma fileira' },
+          keyboard_preset: { type: 'string', enum: ['full', 'tracker', 'vp', 'garage'], description: 'full = teclado inteiro (uma oitava por fileira, padrão), tracker = estilo piano (2 fileiras), vp = Virtual Piano/Roblox, garage = uma fileira' },
         },
       },
     },
@@ -115,7 +115,7 @@ Converse no idioma da pessoa (normalmente português do Brasil), com calor human
 Com as ferramentas você pode:
 - adicionar músicas à biblioteca escrevendo as notas (add_song) — composições, arranjos e exercícios;
 - baixar um arquivo MIDI de um link direto (download_midi);
-- listar e abrir músicas nos modos assistir, praticar ou desafio (list_songs, start_song);
+- listar e abrir músicas nos modos OUVIR, APRENDER ou JOGAR (list_songs, start_song);
 - ver o desempenho e as notas que a pessoa acabou de tocar (get_status) para dar dicas concretas;
 - mudar instrumento, velocidade, volume, metrônomo, tema e mapa do teclado (set_options).
 
@@ -124,7 +124,8 @@ ${NOTATION_HELP}
 Boas práticas:
 - Para iniciantes, prefira arranjos simples (melodia na direita, notas longas de baixo na esquerda) e velocidades de 60–80%.
 - Antes de chamar add_song, confira a soma dos tempos de cada compasso. Se a ferramenta devolver erros, corrija e tente de novo.
-- Quando pedirem uma música: se você tiver um link direto de .mid (por exemplo, achado com a busca na web), tente download_midi; se falhar ou não houver link, escreva um arranjo com add_song. Depois ofereça abrir no modo praticar.
+- Quando pedirem uma música: se você tiver um link direto de .mid (por exemplo, achado com a busca na web), tente download_midi; se falhar ou não houver link, escreva um arranjo com add_song. Depois ofereça abrir no modo APRENDER.
+- Teclado padrão ("teclado inteiro"): cada fileira do teclado do computador é uma oitava (Z…=Dó2, A…=Dó3, Q…=Dó4, números=Dó5) e Shift sobe uma oitava; o app mostra a tecla de cada nota.
 - Quando a pessoa perguntar como foi, use get_status e comente algo específico (notas erradas, ritmo, mão esquerda…), com incentivo.
 - Cada mensagem do usuário vem com um bloco <contexto_app> gerado automaticamente com o estado atual do app; use-o, mas não o repita.`;
   }

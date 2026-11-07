@@ -19,38 +19,29 @@
       <span class="logo"><i></i><i></i><i></i></span>
       <span class="brand-name">PIANEON</span>
     </div>
-    <div class="legend">
-      <span><i class="sw r"></i>M. DIREITA</span>
-      <span><i class="sw l"></i>M. ESQUERDA</span>
-      <span><i class="sw y"></i>VOCÊ</span>
+    <div class="seg modes" id="modeSeg" role="group" aria-label="Modo">
+      <button data-mode="free" title="Toque à vontade">LIVRE</button>
+      <button data-mode="watch" title="A música toca sozinha">OUVIR</button>
+      <button data-mode="practice" title="A música espera você acertar">APRENDER</button>
+      <button data-mode="challenge" title="Valendo pontos e combo">JOGAR</button>
     </div>
-    <div class="songbox">
-      <div id="songTitle" class="song-title">MODO LIVRE</div>
+    <div class="nowplaying">
+      <div id="songTitle" class="song-title">Modo livre</div>
       <div id="songMeta" class="song-meta">toque com o teclado do computador</div>
     </div>
     <div class="transport">
       <button id="btnRestart" class="ib" title="Recomeçar (Backspace)" aria-label="Recomeçar">⟲</button>
       <button id="btnPlay" class="ib play" title="Tocar / pausar (Enter)" aria-label="Tocar ou pausar">▶</button>
-      <div class="seg" id="modeSeg" role="group" aria-label="Modo">
-        <button data-mode="watch" title="A música toca sozinha">ASSISTIR</button>
-        <button data-mode="practice" title="Espera você acertar cada nota">PRATICAR</button>
-        <button data-mode="challenge" title="Tempo real com pontos e combo">DESAFIO</button>
-      </div>
-      <div class="seg small" id="handSeg" role="group" aria-label="Mãos">
-        <button data-hand="L" title="Tocar só a mão esquerda">ESQ</button>
-        <button data-hand="LR" title="Tocar as duas mãos">AMBAS</button>
-        <button data-hand="R" title="Tocar só a mão direita">DIR</button>
-      </div>
-      <label class="speed" title="Velocidade (setas ↑ ↓)">VEL
+      <label class="speed" title="Velocidade (setas ↑ ↓)"><span>VEL</span>
         <input type="range" id="speed" min="25" max="200" step="5" value="100">
-        <span id="speedVal">100%</span>
+        <b id="speedVal">100%</b>
       </label>
     </div>
-    <nav class="actions">
-      <button id="btnLibrary" class="tb">♫ MÚSICAS</button>
+    <nav class="tools">
+      <button id="btnSongs" class="tb only-narrow">♫ MÚSICAS</button>
       <button id="btnRecord" class="tb rec" title="Gravar o que você toca">● GRAVAR</button>
-      <button id="btnKeys" class="tb">⌨ TECLADO</button>
-      <button id="btnAI" class="tb ai">✦ IA</button>
+      <button id="btnKeys" class="tb" title="Trocar o mapa do teclado">⌨ TECLADO</button>
+      <button id="btnAI" class="tb ai" title="Conversar com a sua IA">✦ IA</button>
       <button id="btnSettings" class="ib" title="Ajustes" aria-label="Ajustes">⚙</button>
       <button id="btnTheme" class="ib" title="Tema claro/escuro" aria-label="Tema">◑</button>
       <button id="btnFocus" class="ib" title="Modo foco (esconde os medidores)" aria-label="Modo foco">⊡</button>
@@ -59,36 +50,77 @@
   </header>
 
   <main class="stage" id="stage">
-    <section class="panel p-highway"><canvas id="cvHighway"></canvas></section>
-    <div class="instr">
-      <section class="panel p-dial"><canvas id="cvDial"></canvas></section>
-      <section class="panel p-roll"><canvas id="cvRoll"></canvas></section>
-      <section class="panel p-wave"><canvas id="cvWave"></canvas></section>
-      <section class="panel p-scope"><canvas id="cvScope"></canvas></section>
-      <section class="panel p-spec"><canvas id="cvSpec"></canvas></section>
-      <section class="panel p-vector"><canvas id="cvVector"></canvas></section>
-      <section class="panel p-map win">
-        <div class="winbar"><i></i><i></i><i></i><span>MAPA DA MÚSICA</span></div>
-        <canvas id="cvMap" title="Clique para pular para um trecho"></canvas>
-      </section>
-      <section class="panel p-gram dark"><canvas id="cvGram"></canvas></section>
+    <aside class="card sidebar" id="sidebar" aria-label="Músicas">
+      <div class="sb-head">
+        <span class="card-title"><i class="dot"></i>MÚSICAS</span>
+        <button class="tb sm" id="sbImport" title="Importar MIDI, partitura de letras…">+ IMPORTAR</button>
+      </div>
+      <input type="search" id="sbSearch" class="search" placeholder="Buscar música…">
+      <div class="chips" id="sbChips">
+        <button data-f="all" class="on">Todas</button>
+        <button data-f="facil">Fáceis</button>
+        <button data-f="festa">Festas</button>
+        <button data-f="classica">Clássicas</button>
+        <button data-f="mine">Minhas</button>
+      </div>
+      <div class="song-list" id="songList"></div>
+      <button class="ask-ai" id="sbAskAi">✦ Pedir uma música para a IA</button>
+    </aside>
+
+    <section class="card p-highway" id="highwayCard">
+      <canvas id="cvHighway"></canvas>
+      <div class="ready hidden" id="readyCard">
+        <div class="ready-card">
+          <div class="rc-kicker" id="rcMode">APRENDER</div>
+          <h2 id="rcTitle">—</h2>
+          <div class="rc-sub" id="rcSub"></div>
+          <p class="rc-explain" id="rcExplain"></p>
+          <div class="rc-row"><span>MODO</span>
+            <div class="seg" id="rcModes"><button data-mode="watch">OUVIR</button><button data-mode="practice">APRENDER</button><button data-mode="challenge">JOGAR</button></div>
+          </div>
+          <div class="rc-row" id="rcHandsRow"><span>MÃOS</span>
+            <div class="seg" id="rcHands"><button data-hand="L">ESQUERDA</button><button data-hand="LR">AS DUAS</button><button data-hand="R">DIREITA</button></div>
+          </div>
+          <div class="rc-row"><span>VELOCIDADE</span>
+            <span class="stepper"><button id="rcSlower" aria-label="Mais devagar">−</button><b id="rcSpeed">100%</b><button id="rcFaster" aria-label="Mais rápido">+</button></span>
+          </div>
+          <button class="start" id="rcStart">▶ COMEÇAR</button>
+          <small class="muted">ou aperte <kbd>ENTER</kbd></small>
+        </div>
+      </div>
+    </section>
+
+    <div class="instr" id="instr">
+      <section class="card p-dial"><canvas id="cvDial"></canvas></section>
+      <section class="card p-roll"><canvas id="cvRoll"></canvas></section>
+      <section class="card p-wave"><canvas id="cvWave"></canvas></section>
+      <section class="card p-gram dark"><canvas id="cvGram"></canvas></section>
+      <section class="card p-scope"><canvas id="cvScope"></canvas></section>
+      <section class="card p-spec"><canvas id="cvSpec"></canvas></section>
+      <section class="card p-vector"><canvas id="cvVector"></canvas></section>
     </div>
   </main>
 
-  <section class="keys" id="keysArea">
+  <section class="card piano"><canvas id="cvPiano" title="Clique nas teclas para tocar"></canvas></section>
+
+  <section class="card keys" id="keysArea">
     <div class="keys-head">
-      <span id="presetName">TECLADO: PROFISSIONAL</span>
-      <span class="keys-tips">← → OITAVA · ESPAÇO = PEDAL · ENTER = TOCAR/PAUSAR · TAB = FALAR COM A IA</span>
+      <span class="card-title"><i class="dot"></i><span id="presetName">SEU TECLADO</span></span>
+      <span class="keys-hint" id="keysHint"></span>
+      <span class="keys-actions">
+        <button class="tb sm" id="kbChange">TROCAR MAPA</button>
+        <button class="tb sm" id="kbToggle" title="Mostrar/ocultar o teclado">▾ OCULTAR</button>
+      </span>
     </div>
-    <div class="keycaps" id="keycaps"></div>
+    <div class="kb" id="kb"></div>
   </section>
 
   <footer class="status">
-    <div class="progress" id="progress" title="Clique para pular"><div class="bar" id="progressBar"></div></div>
-    <span id="timeText" class="time">0:00 / 0:00</span>
-    <span id="sustainInd" class="ind">SUSTAIN</span>
+    <div class="progress" id="progress" title="Clique para pular"><canvas id="cvProgress"></canvas></div>
+    <span id="timeText" class="time">0:00</span>
+    <span id="sustainInd" class="ind">PEDAL</span>
     <span id="octInd" class="ind">OITAVA 0</span>
-    <span id="metroInd" class="ind click" title="Metrônomo">METRÔNOMO</span>
+    <span id="metroInd" class="ind click" title="Metrônomo (tecla ao lado do 1)">METRÔNOMO</span>
     <span id="recInd" class="ind rec hidden">● REC 0:00</span>
     <span id="midiInd" class="ind hidden">MIDI</span>
     <span id="sampleInd" class="ind">PIANO —</span>
@@ -184,7 +216,7 @@
         <label class="chk"><input type="checkbox" id="kbNumpad"> teclado numérico toca graves</label>
       </div>
       <h3>PRÉVIA <small>— clique numa tecla para ouvir</small></h3>
-      <div class="keycaps preview" id="keycapsPreview"></div>
+      <div class="kb preview" id="keycapsPreview"></div>
       <h3>TROCAR TECLAS <small>— clique numa nota do piano e depois aperte a tecla do computador (Delete remove, Esc cancela)</small></h3>
       <div class="piano-strip" id="pianoStrip"></div>
       <div class="row end">
@@ -258,14 +290,13 @@
   <div class="splash-card">
     <div class="splash-logo"><i></i><i></i><i></i></div>
     <h1>PIANEON</h1>
-    <p class="tag">Toque piano com o teclado do computador. Aprenda músicas como num jogo. Converse com a sua IA enquanto toca.</p>
-    <ul class="feat">
-      <li><b>⌨</b> Funciona com qualquer teclado (ABNT2, notebook, 60%…) — e você pode remapear tudo</li>
-      <li><b>♫</b> Importe MIDI, partituras de letras ou peça músicas para a IA</li>
-      <li><b>◎</b> Modos assistir, praticar (espera você) e desafio (pontos e combo)</li>
-    </ul>
-    <button id="startBtn" class="start">COMEÇAR ▸</button>
-    <small class="muted">Dica: aperte as teclas Z X C V B N M para tocar.</small>
+    <p class="tag">Toque piano com o teclado do computador. <b>Todas as teclas tocam</b>: cada fileira é uma oitava, a tecla <kbd>Q</kbd> é o Dó central.</p>
+    <div class="choices">
+      <button class="choice" data-go="free"><b>🎹</b><span>Tocar livre</span><small>experimente o teclado</small></button>
+      <button class="choice primary" data-go="learn"><b>🎓</b><span>Aprender uma música</span><small>começa com "Brilha, Brilha"</small></button>
+      <button class="choice" data-go="ai"><b>✦</b><span>Conversar com a IA</span><small>use a sua própria IA</small></button>
+    </div>
+    <small class="muted">Funciona com teclado ABNT2, notebook, 60%… e você pode trocar o mapa em ⌨ TECLADO.</small>
   </div>
 </div>
 

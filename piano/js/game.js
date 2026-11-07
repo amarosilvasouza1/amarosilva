@@ -5,10 +5,10 @@
   const { util, store, bus, audio } = PN;
 
   const MODES = {
-    free: { name: 'LIVRE' },
-    watch: { name: 'ASSISTIR' },
-    practice: { name: 'PRATICAR' },
-    challenge: { name: 'DESAFIO' },
+    free: { name: 'LIVRE', explain: 'Toque à vontade! Tudo o que você toca aparece na tela.' },
+    watch: { name: 'OUVIR', explain: 'A música toca sozinha e mostra quais teclas apertar. Ótimo para conhecer a música.' },
+    practice: { name: 'APRENDER', explain: 'A música espera você: ela só continua quando você acerta a tecla que pisca. Sem pressa!' },
+    challenge: { name: 'JOGAR', explain: 'Valendo pontos! Aperte quando a nota encostar na linha. Acertos seguidos aumentam o combo até ×4.' },
   };
   // Janelas de acerto em segundos reais
   const WIN = { perfect: 0.05, great: 0.1, good: 0.16 };
@@ -69,7 +69,7 @@
       if (song) {
         const first = this.notes.length ? this.notes[0].time : 0;
         this.t = Math.min(0, first) - this.leadIn * this.speed;
-        this.state = opts.paused ? 'paused' : 'playing';
+        this.state = opts.autostart ? 'playing' : 'ready';
       } else {
         this.state = 'idle';
       }
@@ -165,7 +165,7 @@
         const src = this.targets.length ? this.targets : this.notes;
         set = new Set(src.map((n) => n.playMidi));
       } else {
-        set = new Set([...PN.keymap.availableSet()]);
+        set = new Set(Object.values(PN.keymap.map));
       }
       let lanes = [...set].sort((a, b) => a - b);
       if (!lanes.length) lanes = [60, 62, 64, 65, 67, 69, 71, 72];
@@ -179,11 +179,15 @@
       if (!h.R && !h.L) h = { R: true, L: true };
       this.hands = h;
       store.set('hands', h);
-      if (!silent && this.song) this.restart();
+      if (!silent && this.song) this.restart(false);
     }
     setSpeed(s) {
       this.speed = util.clamp(Math.round(s * 100) / 100, 0.25, 2);
       store.set('speed', this.speed);
+      if (this.state === 'ready' && this.song) {
+        const first = this.notes.length ? this.notes[0].time : 0;
+        this.t = Math.min(0, first) - this.leadIn * this.speed;
+      }
       if (this.state === 'playing') {
         audio.cancelScheduled();
         this._resyncAuto();
@@ -199,7 +203,13 @@
     // ------------------------------------------------------------ transporte
     play() {
       if (!this.song) return;
-      if (this.state === 'finished') return this.restart();
+      if (this.state === 'finished') return this.restart(true);
+      if (this.state === 'ready') {
+        this.state = 'playing';
+        this._resyncAuto();
+        bus.emit('player:state', this.state);
+        return;
+      }
       if (this.state === 'paused') {
         this.state = this._waitingGroup() ? 'waiting' : 'playing';
         this._resyncAuto();
@@ -214,12 +224,12 @@
       }
     }
     toggle() {
-      if (this.state === 'paused' || this.state === 'finished') this.play();
+      if (this.state === 'paused' || this.state === 'finished' || this.state === 'ready') this.play();
       else this.pause();
     }
-    restart() {
+    restart(autostart) {
       if (!this.song) return;
-      this.load(this.song, this.mode);
+      this.load(this.song, this.mode, { autostart: !!autostart });
     }
     stop(silent) {
       audio.cancelScheduled();
