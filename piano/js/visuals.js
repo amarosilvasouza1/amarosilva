@@ -13,7 +13,7 @@
     C = {
       bg: v('bg'), panel: v('panel'), panel2: v('panel-2'), line: v('line'), grid: v('grid'), grid2: v('grid-2'),
       ink: v('ink'), muted: v('muted'), teal: v('teal'), tealSoft: v('teal-soft'), blue: v('blue'), blueSoft: v('blue-soft'),
-      purple: v('accent'), accent: v('accent'), red: v('red'), green: v('green'), amber: v('amber'), dark: v('dark'), darkInk: v('dark-ink'), bars: v('bars'),
+      purple: v('accent'), accent: v('accent'), accentInk: v('accent-ink'), red: v('red'), green: v('green'), amber: v('amber'), dark: v('dark'), darkInk: v('dark-ink'), bars: v('bars'),
     };
   }
 
@@ -93,27 +93,28 @@
   function drawDial(p, S) {
     const { ctx, w, h } = p;
     ctx.clearRect(0, 0, w, h);
-    const cx = w / 2;
-    const cy = h / 2 + 2;
-    const R = Math.min(w, h) / 2 - 20;
-    if (R < 24) return;
     const ts = Math.max(1, Math.round(S.timeSig));
     const bp = S.beatPos;
     const bar = Math.floor(bp / ts) + 1;
     const frac = (((bp / ts) % 1) + 1) % 1;
     const curBeat = Math.floor(frac * ts);
+    // em cartões altos, o mostrador fica em cima e os números embaixo
+    const tall = h > w * 1.25;
+    const R = tall ? Math.min(w / 2 - 22, h * 0.3) : Math.min(w, h) / 2 - 20;
+    if (R < 24) return;
+    const cx = w / 2;
+    const cy = tall ? R + 26 : h / 2 + 2;
 
     ctx.strokeStyle = C.line;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(cx, cy, R, 0, Math.PI * 2);
     ctx.stroke();
-
     const ticks = ts * 4;
     for (let i = 0; i < ticks; i++) {
       const a = -Math.PI / 2 + (i / ticks) * Math.PI * 2;
       const major = i % 4 === 0;
-      const r0 = R - (major ? 13 : 5);
+      const r0 = R - (major ? 11 : 5);
       ctx.strokeStyle = major ? C.ink : C.muted;
       ctx.lineWidth = major ? 1.6 : 1;
       ctx.beginPath();
@@ -121,59 +122,73 @@
       ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
       ctx.stroke();
       if (major) {
-        const b = i / 4;
-        const lx = cx + Math.cos(a) * (R + 11);
-        const ly = cy + Math.sin(a) * (R + 11) + 4;
-        label(ctx, String(b + 1), lx, ly, b === curBeat ? C.blue : C.muted, 11, 600, 'center');
+        const b2 = i / 4;
+        label(ctx, String(b2 + 1), cx + Math.cos(a) * (R + 11), cy + Math.sin(a) * (R + 11) + 4, b2 === curBeat ? C.ink : C.muted, 11, b2 === curBeat ? 600 : 500, 'center');
       }
     }
-
-    // anel segmentado + arco de progresso
-    const r1 = R * 0.44;
-    const r2 = R * 0.68;
-    const rm = (r1 + r2) / 2;
-    const N = 32;
-    ctx.lineWidth = r2 - r1;
-    for (let k = 0; k < N; k++) {
-      const a0 = -Math.PI / 2 + (k / N) * Math.PI * 2 + 0.03;
-      const a1 = -Math.PI / 2 + ((k + 1) / N) * Math.PI * 2 - 0.03;
-      ctx.strokeStyle = alpha(C.tealSoft, 0.55);
-      ctx.beginPath();
-      ctx.arc(cx, cy, rm, a0, a1);
-      ctx.stroke();
-    }
-    if (frac > 0.002) {
-      ctx.strokeStyle = C.teal;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.arc(cx, cy, rm, -Math.PI / 2 + 0.04, -Math.PI / 2 + Math.max(0.05, frac * Math.PI * 2 - 0.04));
-      ctx.stroke();
-      ctx.lineCap = 'butt';
-    }
-
-    // disco central
-    const rc = R * 0.36;
-    ctx.fillStyle = C.panel;
-    ctx.strokeStyle = C.line;
-    ctx.lineWidth = 1;
+    // anel de progresso do compasso
+    const rm = R * 0.62;
+    const lw = R * 0.2;
+    ctx.lineWidth = lw;
+    ctx.strokeStyle = C.grid;
     ctx.beginPath();
-    ctx.arc(cx, cy, rc, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.arc(cx, cy, rm, 0, Math.PI * 2);
     ctx.stroke();
-    label(ctx, 'COMPASSO', cx, cy - rc * 0.28, C.muted, Math.max(7, rc * 0.2), 650, 'center', SANS);
-    label(ctx, String(Math.max(0, bar)), cx, cy + rc * 0.52, C.ink, Math.max(12, rc * 0.78), 600, 'center');
-
+    for (let k = 0; k < ts; k++) {
+      const a0 = -Math.PI / 2 + (k / ts) * Math.PI * 2;
+      const a1 = -Math.PI / 2 + ((k + 1) / ts) * Math.PI * 2;
+      const done = k < curBeat;
+      const now = k === curBeat;
+      if (!done && !now) continue;
+      ctx.strokeStyle = now ? C.teal : alpha(C.teal, 0.45);
+      ctx.beginPath();
+      ctx.arc(cx, cy, rm, a0 + 0.04, now ? a0 + (a1 - a0) * ((frac * ts) % 1) : a1 - 0.04);
+      ctx.stroke();
+    }
+    // divisões dos tempos
+    ctx.strokeStyle = C.panel;
+    ctx.lineWidth = 2;
+    for (let k = 0; k < ts; k++) {
+      const a = -Math.PI / 2 + (k / ts) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * (rm - lw / 2 - 1), cy + Math.sin(a) * (rm - lw / 2 - 1));
+      ctx.lineTo(cx + Math.cos(a) * (rm + lw / 2 + 1), cy + Math.sin(a) * (rm + lw / 2 + 1));
+      ctx.stroke();
+    }
     // ponteiro
     const a = -Math.PI / 2 + frac * Math.PI * 2;
     ctx.strokeStyle = C.ink;
     ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * rc * 0.6, cy + Math.sin(a) * rc * 0.6);
+    ctx.moveTo(cx, cy);
     ctx.lineTo(cx + Math.cos(a) * R * 0.94, cy + Math.sin(a) * R * 0.94);
     ctx.stroke();
+    ctx.fillStyle = C.ink;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+    ctx.fill();
 
-    label(ctx, '♩ ' + Math.round(S.bpm), 8, h - 8, C.muted, 10, 500);
-    label(ctx, ts + '/4', w - 8, h - 8, C.muted, 10, 500, 'right');
+    const pos = Math.max(0, bar) + '.' + (curBeat + 1);
+    if (tall) {
+      // leitura numérica embaixo, como num aparelho
+      // legenda em cima, valor embaixo (cabe em cartões estreitos)
+      let y = cy + R + 30;
+      const row = (cap, value, big) => {
+        if (y + (big ? 30 : 24) > h - 4) return;
+        ctx.fillStyle = C.grid;
+        ctx.fillRect(12, y - 12, w - 24, 1);
+        label(ctx, cap, 12, y + 2, C.muted, 10, 650, 'left', SANS);
+        label(ctx, value, 12, y + (big ? 26 : 20), C.ink, big ? 22 : 15, 600, 'left');
+        y += big ? 46 : 40;
+      };
+      row('COMPASSO', pos, true);
+      row('ANDAMENTO', Math.round(S.bpm * (S.song ? S.speed : 1)) + ' bpm');
+      row('FÓRMULA', ts + '/4');
+    } else {
+      label(ctx, pos, cx, cy + R + 0 > h ? h - 6 : h - 8, C.ink, 13, 600, 'center');
+      label(ctx, Math.round(S.bpm) + ' bpm', 8, 16, C.muted, 10, 500);
+      label(ctx, ts + '/4', w - 8, 16, C.muted, 10, 500, 'right');
+    }
   }
 
   // ------------------------------------------------------------------ piano roll
@@ -640,9 +655,10 @@
       ctx.fillStyle = 'rgba(0,0,0,0.18)';
       ctx.fillRect(x - wdt / 2 + 1, y + hgt / 2 - Math.max(1, hgt * 0.18), wdt - 2, Math.max(1, hgt * 0.18));
     };
+    const heads = [];
+    const rCircle = util.clamp(laneW * 0.32, 3, 13);
     if (S.song) {
       const notes = S.notes;
-      const heads = [];
       for (let k = firstIndex(notes, now - 1); k < notes.length; k++) {
         const nt = notes[k];
         const dt0 = nt.time - now;
@@ -662,17 +678,6 @@
           ctx.fill();
         }
         if (!isHit && dt0 >= -0.2 * S.speed) heads.push([xc, dt0, col, nt]);
-      }
-      for (let k = heads.length - 1; k >= 0; k--) {
-        const [xc, dt0, col, nt] = heads[k];
-        const [x, y, s] = proj(xc, dt0);
-        const pw = util.clamp(laneW * 0.74 * s, 4, 54);
-        const ph = util.clamp(16 * s, 3, 18);
-        pill(x, y, pw, ph, col);
-        if (s > 0.55 && ph >= 12 && S.showKeyOnNotes) {
-          const kl = S.keyLabel(nt.playMidi);
-          if (kl) label(ctx, kl, x, y + 4, '#ffffff', Math.min(12, ph * 0.75), 700, 'center');
-        }
       }
     } else {
       // modo livre: o que você toca sobe pela pista
@@ -718,7 +723,7 @@
     const pulse = 0.5 + 0.5 * Math.sin(S.now * 8);
     for (let i = 0; i < n; i++) {
       const xc = laneX(i);
-      const r = util.clamp(laneW * 0.32, 3, 13);
+      const r = rCircle;
       const midi = lanes[i];
       const held = S.held.has(midi);
       const autoOn = S.autoLanes.has(i);
@@ -751,6 +756,19 @@
           ctx.stroke();
           label(ctx, kl, xc, hitY + r + 18.5, held ? '#fff' : C.ink, 10, 600, 'center');
         }
+      }
+    }
+
+    // cabeças das notas por cima dos alvos (as mais próximas por último)
+    for (let k = heads.length - 1; k >= 0; k--) {
+      const [xc, dt0, col, nt] = heads[k];
+      const [x, y, s] = proj(xc, dt0);
+      const pw = Math.min(util.clamp(laneW * 0.62 * s, 4, 48), 2 * rCircle + 8);
+      const ph = util.clamp(15 * s, 3, 16);
+      pill(x, y, pw, ph, col);
+      if (s > 0.55 && ph >= 12 && S.showKeyOnNotes) {
+        const kl = S.keyLabel(nt.playMidi);
+        if (kl) label(ctx, kl, x, y + 4, '#ffffff', Math.min(11, ph * 0.72), 600, 'center');
       }
     }
 
@@ -792,7 +810,7 @@
       cap('PONTOS', 16, 'left');
       val(String(Math.round(st.score)).padStart(7, '0'), 16, 'left');
       cap('COMBO', w - 16, 'right');
-      val(st.combo + ' ×' + S.multiplier, w - 16, 'right', st.combo >= 10 ? C.accent : C.ink);
+      val(st.combo + ' ×' + S.multiplier, w - 16, 'right', st.combo >= 10 ? C.accentInk : C.ink);
     } else if (S.mode === 'practice') {
       cap('CERTAS / ERRADAS', 16, 'left');
       val(st.correct + ' / ' + st.wrong, 16, 'left');

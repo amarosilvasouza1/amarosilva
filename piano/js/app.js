@@ -71,6 +71,13 @@
     download((song.title || 'pianeon').replace(/[\\/:*?"<>|]+/g, '_') + '.mid', new Blob([bytes], { type: 'audio/midi' }));
   }
 
+  // Depois de clicar com o mouse, tira o foco do botão: assim Espaço/Enter tocam o piano
+  // em vez de "apertar" de novo o último botão clicado.
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('button');
+    if (b && e.detail > 0 && !b.closest('.chat-input')) b.blur();
+  });
+
   // ------------------------------------------------------------------ modais
   function anyModalOpen() {
     return !!document.querySelector('.modal.open');

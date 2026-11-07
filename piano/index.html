@@ -48,6 +48,7 @@
 </svg>
 <div id="app">
   <header class="topbar">
+    <h1 class="sr-only">pianeon: piano no teclado do computador</h1>
     <div class="brand" title="pianeon"><span class="mark" aria-hidden="true"></span><span class="brand-name">pianeon</span></div>
     <div class="seg modes" id="modeSeg" role="group" aria-label="Modo">
       <button data-mode="free" title="Toque à vontade"><svg class="i"><use href="#i-music"/></svg><span>Livre</span></button>
@@ -98,8 +99,8 @@
       <button class="ask-ai" id="sbAskAi"><svg class="i"><use href="#i-messages-square"/></svg>Pedir uma música ao assistente</button>
     </aside>
 
-    <section class="card p-highway" id="highwayCard">
-      <canvas id="cvHighway"></canvas>
+    <section class="card p-highway" id="highwayCard" aria-label="Pista de notas">
+      <canvas id="cvHighway" role="img" aria-label="Notas descendo até a linha de acerto"></canvas>
       <div class="ready hidden" id="readyCard">
         <div class="ready-card">
           <div class="rc-kicker" id="rcMode">Aprender</div>
@@ -121,7 +122,7 @@
       </div>
     </section>
 
-    <div class="instr" id="instr">
+    <div class="instr" id="instr" role="region" aria-label="Medidores">
       <section class="card p-dial"><canvas id="cvDial"></canvas></section>
       <section class="card p-roll"><canvas id="cvRoll"></canvas></section>
       <section class="card p-wave"><canvas id="cvWave"></canvas></section>
@@ -132,9 +133,9 @@
     </div>
   </main>
 
-  <section class="card piano"><canvas id="cvPiano" title="Clique nas teclas para tocar"></canvas></section>
+  <section class="card piano" aria-label="Piano"><canvas id="cvPiano" role="img" aria-label="Piano: clique nas teclas para tocar" title="Clique nas teclas para tocar"></canvas></section>
 
-  <section class="card keys" id="keysArea">
+  <section class="card keys" id="keysArea" aria-label="Teclado do computador">
     <div class="keys-head">
       <span class="card-title">Teclado do computador <small id="presetName"></small></span>
       <span class="keys-hint" id="keysHint"></span>
@@ -146,7 +147,7 @@
     <div class="kb" id="kb"></div>
   </section>
 
-  <footer class="status">
+  <footer class="status" aria-label="Progresso e estado">
     <div class="progress" id="progress" title="Clique para pular"><canvas id="cvProgress"></canvas></div>
     <span id="timeText" class="time">0:00</span>
     <span id="sustainInd" class="ind">pedal</span>
