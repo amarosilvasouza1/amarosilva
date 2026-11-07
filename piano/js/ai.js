@@ -195,7 +195,7 @@ Boas práticas:
     },
     label() {
       const pc = this.pcfg();
-      return (this.prov().name.split(' (')[0] + (pc.model ? ' · ' + pc.model : '')).toUpperCase();
+      return this.prov().name.split(' (')[0] + (pc.model ? ' · ' + pc.model : '');
     },
     reset() {
       this.msgs = [];
@@ -227,7 +227,7 @@ Boas práticas:
     async send(text, context, cb) {
       if (this.busy) return;
       if (!this.isReady()) {
-        cb.error && cb.error('Configure sua IA primeiro (provedor, chave e modelo) em ⚙ AJUSTES → IA.');
+        cb.error && cb.error('Configure sua IA primeiro (provedor, chave e modelo) em Ajustes → Assistente.');
         return;
       }
       if (this.histProvider && this.histProvider !== this.cfg.provider) this.msgs = [];
@@ -257,7 +257,7 @@ Boas práticas:
     _explain(e) {
       const st = e && (e.status || (e.response && e.response.status));
       const msg = String((e && e.message) || e);
-      if (st === 401 || /401|invalid x-api-key|authentication/i.test(msg)) return 'A chave da API foi recusada (401). Confira a chave em ⚙ AJUSTES → IA.';
+      if (st === 401 || /401|invalid x-api-key|authentication/i.test(msg)) return 'A chave da API foi recusada (401). Confira a chave em Ajustes → Assistente.';
       if (st === 403) return 'Acesso negado (403). Sua chave pode não ter permissão para esse modelo.';
       if (st === 404) return 'Modelo ou endereço não encontrado (404). Confira o nome do modelo e a URL.';
       if (st === 429) return 'Limite de uso atingido (429). Espere um pouco e tente de novo.';

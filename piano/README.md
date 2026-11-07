@@ -1,6 +1,6 @@
-# 🎹 Pianeon — piano no teclado do computador
+# pianeon
 
-Toque piano com o **teclado do PC**, aprenda músicas **como num jogo**, importe arquivos **MIDI** e converse com a **sua própria IA** enquanto toca.
+Piano no teclado do computador. Dá para aprender músicas como num jogo, importar arquivos MIDI e conversar com a sua própria IA enquanto toca.
 Visual de "painel de estúdio": lista de músicas, pista 3D com notas e partículas, piano desenhado, teclado do computador desenhado, piano roll, mostrador de compasso e medidores de áudio (waveform, scope, spectrum, vector, espectrograma), tudo reagindo ao que você toca. Tem tema claro e escuro.
 
 ## Como abrir
@@ -96,19 +96,33 @@ Nota = letra + `#`/`b` + oitava (C4 = Dó central) · acorde com `+` · `:duraç
 
 Piano de cauda com samples reais (**Salamander Grand Piano**, CC-BY 3.0, Alexander Holm — carregados do CDN do Tone.js), reverb de sala e posição estéreo por altura da nota. Também tem piano elétrico, synth, cordas, órgão, caixinha de música e um piano sintetizado que funciona sem internet.
 
+## Ferramentas usadas
+
+Ficam dentro da pasta `vendor/`, então o site funciona sem depender delas na internet:
+
+| Ferramenta | Para quê | Licença |
+|---|---|---|
+| [Lucide](https://lucide.dev) | ícones | ISC |
+| [Archivo](https://fonts.google.com/specimen/Archivo) e [IBM Plex Mono](https://www.ibm.com/plex/) | fontes | SIL OFL 1.1 |
+| [@tonejs/midi](https://github.com/Tonejs/Midi) | leitura de arquivos MIDI | MIT |
+
+Pela internet: os samples do piano de cauda (Salamander, CC-BY 3.0) e, só quando o assistente é usado com Claude, o SDK oficial da Anthropic (`@anthropic-ai/sdk`).
+
 ## Arquivos
 
 ```
 piano/
-  index.html        interface
+  index.html        interface (inclui os ícones)
+  css/fonts.css     fontes embutidas
   css/style.css     visual (tema claro e escuro)
+  vendor/           ícones, fontes e @tonejs/midi (com as licenças)
   js/util.js        utilidades
   js/audio.js       motor de som (samples + sintetizadores)
-  js/midi.js        leitor/gravador de MIDI e teclado MIDI
+  js/midi.js        leitura/gravação de MIDI e teclado MIDI
   js/songs.js       biblioteca, notação e partituras de letras
-  js/keymap.js      mapas de teclado e layouts (ABNT2/ANSI/ISO)
-  js/game.js        modos assistir / praticar / desafio
-  js/visuals.js     pista 3D, piano roll e medidores
-  js/ai.js          assistente de IA (Claude + compatíveis com OpenAI)
+  js/keymap.js      mapas de teclado e formatos (ABNT2/ANSI/ISO)
+  js/game.js        modos ouvir / aprender / jogar
+  js/visuals.js     pista 3D, piano, piano roll e medidores
+  js/ai.js          assistente (Claude + APIs compatíveis com OpenAI)
   js/app.js         liga tudo
 ```

@@ -52,7 +52,7 @@
   const PRESETS = {
     full: {
       name: 'Teclado inteiro',
-      desc: 'TODAS as teclas tocam. Cada fileira é uma oitava: começa em Dó na esquerda e vai até Si na direita. Fileira de baixo = grave, fileira dos números = agudo. Segure SHIFT para subir uma oitava.',
+      desc: 'Todas as teclas tocam. Cada fileira é uma oitava, de Dó (à esquerda) até Si. A fileira de baixo é a mais grave e a dos números a mais aguda. Shift sobe uma oitava.',
       shiftOctave: true,
       build(layout) {
         const m = {};
@@ -66,7 +66,7 @@
     },
     tracker: {
       name: 'Estilo piano',
-      desc: 'Duas fileiras por oitava, como em programas de música (FL Studio, Ableton). Z X C V… são as teclas brancas de baixo, S D G H J as pretas; Q W E R… é a oitava de cima. ~2,5 oitavas contínuas.',
+      desc: 'Como no FL Studio e no Ableton: Z X C V… são as teclas brancas, S D G H J as pretas, e a fileira do Q é a oitava de cima. Umas duas oitavas e meia.',
       build() {
         const m = {};
         const n = 48; // Dó3
@@ -80,7 +80,7 @@
     },
     vp: {
       name: 'Virtual Piano / Roblox',
-      desc: 'Igual aos sites de "piano virtual": 1 2 3… Q W E… A S D… Z X C… são as teclas brancas (5 oitavas). Segure SHIFT para o sustenido (tecla preta). Funciona com partituras de letras.',
+      desc: 'Igual aos sites de piano virtual: 1 2 3… Q W E… A S D… Z X C… são as teclas brancas (5 oitavas) e o Shift dá o sustenido. Serve para as partituras de letras.',
       shiftSharp: true,
       build() {
         const m = {};
@@ -92,7 +92,7 @@
     },
     garage: {
       name: 'Uma fileira',
-      desc: 'Estilo "digitação musical": A S D F G H J K L são as brancas, W E T Y U O P as pretas. Z e X trocam a oitava. Ótimo para notebooks e teclados pequenos.',
+      desc: 'A S D F G H J K L são as brancas e W E T Y U O P as pretas. Z e X trocam a oitava. Bom para notebook.',
       octaveKeys: { KeyZ: -1, KeyX: 1 },
       build() {
         const m = {};
@@ -103,7 +103,7 @@
     },
     custom: {
       name: 'Personalizado',
-      desc: 'Seu próprio mapa: escolha qualquer tecla para qualquer nota no editor.',
+      desc: 'Você escolhe qual tecla toca cada nota.',
       build: () => ({}),
     },
   };
@@ -292,7 +292,7 @@
     },
     shiftMeaning() {
       const p = PRESETS[this.preset];
-      return p.shiftSharp ? 'SUSTENIDO ♯' : p.shiftOctave ? 'OITAVA ↑' : '';
+      return p.shiftSharp ? 'sustenido' : p.shiftOctave ? 'oitava ↑' : '';
     },
     /** Rótulo visível da tecla, respeitando o layout real do usuário quando possível. */
     label(code) {

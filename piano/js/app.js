@@ -119,21 +119,21 @@
   const pressedCount = new Map();
 
   const FN_KEY = {
-    Backquote: null, Backspace: '⌫ APAGAR', Tab: 'TAB ⇥', CapsLock: 'CAPS', Enter: 'ENTER ⏎', ShiftLeft: '⇧ SHIFT', ShiftRight: '⇧ SHIFT',
-    ControlLeft: 'CTRL', ControlRight: 'CTRL', AltLeft: 'ALT', AltRight: 'ALT GR', Space: 'ESPAÇO', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓',
+    Backquote: null, Backspace: '⌫', Tab: 'Tab', CapsLock: 'Caps', Enter: 'Enter', ShiftLeft: 'Shift', ShiftRight: 'Shift',
+    ControlLeft: 'Ctrl', ControlRight: 'Ctrl', AltLeft: 'Alt', AltRight: 'Alt Gr', Space: 'Espaço', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓',
   };
   function fnMeaning(code) {
     switch (code) {
-      case 'Backquote': return 'METRÔ';
-      case 'Backspace': return 'RECOMEÇAR';
-      case 'Tab': return '🎙 IA';
-      case 'Enter': return '▶ TOCAR';
-      case 'ShiftLeft': case 'ShiftRight': return keymap.shiftMeaning();
-      case 'Space': return 'PEDAL (SUSTAIN)';
-      case 'ArrowLeft': return 'OIT −';
-      case 'ArrowRight': return 'OIT +';
-      case 'ArrowUp': return 'VEL +';
-      case 'ArrowDown': return 'VEL −';
+      case 'Backquote': return 'metrô';
+      case 'Backspace': return 'recomeçar';
+      case 'Tab': return 'microfone';
+      case 'Enter': return 'tocar';
+      case 'ShiftLeft': case 'ShiftRight': return keymap.shiftMeaning().toLowerCase();
+      case 'Space': return 'pedal';
+      case 'ArrowLeft': return 'oit. −';
+      case 'ArrowRight': return 'oit. +';
+      case 'ArrowUp': return 'vel. +';
+      case 'ArrowDown': return 'vel. −';
       default: return '';
     }
   }
@@ -212,7 +212,7 @@
       }
       keyEl.textContent = keymap.label(code);
       if (preset.octaveKeys && preset.octaveKeys[code] != null) {
-        noteEl.textContent = preset.octaveKeys[code] < 0 ? 'OIT −' : 'OIT +';
+        noteEl.textContent = preset.octaveKeys[code] < 0 ? 'oit. −' : 'oit. +';
         b.classList.add('fn', 'useful');
         continue;
       }
@@ -306,11 +306,11 @@
   }
 
   const PRESET_HINT = {
-    full: 'CADA FILEIRA É UMA OITAVA · Q = DÓ CENTRAL · SEGURE SHIFT PARA SUBIR UMA OITAVA',
-    tracker: 'Z X C V B N M = TECLAS BRANCAS · S D G H J = PRETAS · Q W E R T Y U = OITAVA DE CIMA',
-    vp: 'NÚMEROS E LETRAS = TECLAS BRANCAS · SEGURE SHIFT PARA O SUSTENIDO',
-    garage: 'A S D F G H J K L = BRANCAS · W E T Y U O P = PRETAS · Z / X MUDAM A OITAVA',
-    custom: 'SEU MAPA PERSONALIZADO · TROQUE AS TECLAS EM "TROCAR MAPA"',
+    full: 'Cada fileira é uma oitava. O Q é o Dó central e o Shift sobe uma oitava.',
+    tracker: 'Z X C V B N M são as teclas brancas e S D G H J as pretas. A fileira do Q é a oitava de cima.',
+    vp: 'Números e letras são as teclas brancas. Segure Shift para o sustenido.',
+    garage: 'A S D F G H J K L são as brancas, W E T Y U O P as pretas. Z e X mudam a oitava.',
+    custom: 'Mapa personalizado. Dá para mudar em Trocar mapa.',
   };
 
   // ------------------------------------------------------------------ notas
@@ -347,7 +347,7 @@
       case 'metronome':
         if (down) {
           setMetronome(!player.metronome);
-          toast('Metrônomo ' + (player.metronome ? 'ligado' : 'desligado'));
+          toast('Metrônomo ' + (player.metronome ? 'ligado' : 'desligado') + '.');
         }
         break;
       case 'octDown':
@@ -399,15 +399,15 @@
       this.notes = [];
       this.open.clear();
       $('#btnRecord').classList.add('on');
-      $('#btnRecord').textContent = '■ PARAR';
+      $('#btnRecord').querySelector('span').textContent = 'Parar';
       $('#recInd').classList.remove('hidden');
-      toast('Gravando… toque à vontade!');
+      toast('Gravando. Aperte Parar quando terminar.');
     },
     stop() {
       this.active = false;
       for (const m of [...this.open.keys()]) this.off(m);
       $('#btnRecord').classList.remove('on');
-      $('#btnRecord').textContent = '● GRAVAR';
+      $('#btnRecord').querySelector('span').textContent = 'Gravar';
       $('#recInd').classList.add('hidden');
       if (!this.notes.length) {
         toast('Nada gravado.');
@@ -419,8 +419,8 @@
       const song = songs.finalizeSong({ id: 'u-' + util.uid(), title, composer: 'Você', difficulty: 2, bpm: 120, timeSig: 4, source: 'rec', tags: ['gravação'], notes });
       songs.library.add(song);
       toast('"' + title + '" salva na biblioteca.', null, [
-        { label: 'OUVIR', fn: () => loadSong(song, 'watch') },
-        { label: 'BAIXAR .MID', fn: () => downloadSongMidi(song) },
+        { label: 'Ouvir', fn: () => loadSong(song, 'watch') },
+        { label: 'Baixar .mid', fn: () => downloadSongMidi(song) },
       ]);
     },
     on(m, vel) {
@@ -466,7 +466,7 @@
   }
   function updatePlayBtn() {
     const playing = player.state === 'playing' || player.state === 'waiting';
-    $('#btnPlay').textContent = playing ? '❚❚' : '▶';
+    $('#btnPlay').innerHTML = '<svg class="i"><use href="#i-' + (playing ? 'pause' : 'play') + '"/></svg>';
     updateReady();
   }
 
@@ -478,12 +478,14 @@
     if (!show) return;
     $('#rcMode').textContent = PN.MODES[player.mode].name;
     $('#rcTitle').textContent = s.title;
-    $('#rcSub').textContent = [s.composer, util.formatTime(s.duration), '●'.repeat(s.difficulty) + '○'.repeat(5 - s.difficulty)].filter(Boolean).join(' · ');
+    $('#rcSub').textContent = [s.composer, util.formatTime(s.duration), ['muito fácil', 'fácil', 'médio', 'difícil', 'muito difícil'][s.difficulty - 1]].filter(Boolean).join(', ');
     $('#rcExplain').textContent = PN.MODES[player.mode].explain;
     $$('#rcModes button').forEach((b) => b.classList.toggle('on', b.dataset.mode === player.mode));
     const hk = player.hands.R && player.hands.L ? 'LR' : player.hands.R ? 'R' : 'L';
     $$('#rcHands button').forEach((b) => b.classList.toggle('on', b.dataset.hand === hk));
-    $('#rcHandsRow').classList.toggle('hidden', player.mode === 'watch' || !s.hands.L || !s.hands.R);
+    const noHands = player.mode === 'watch' || !s.hands.L || !s.hands.R;
+    $('#rcHands').classList.toggle('hidden', noHands);
+    $('#rcHandsLabel').classList.toggle('hidden', noHands);
     $('#rcSpeed').textContent = Math.round(player.speed * 100) + '%';
   }
   $$('#rcModes button').forEach((b) => (b.onclick = () => player.song && loadSong(player.song, b.dataset.mode)));
@@ -509,9 +511,9 @@
   bus.on('player:state', updatePlayBtn);
   bus.on('player:finish', (res) => {
     if (res.mode === 'watch') {
-      toast('Fim! Agora é a sua vez?', null, [
-        { label: 'APRENDER', fn: () => loadSong(res.song, 'practice') },
-        { label: 'JOGAR', fn: () => loadSong(res.song, 'challenge') },
+      toast('Acabou. Quer tentar tocar?', null, [
+        { label: 'Aprender', fn: () => loadSong(res.song, 'practice') },
+        { label: 'Jogar', fn: () => loadSong(res.song, 'challenge') },
       ]);
       return;
     }
@@ -530,7 +532,7 @@
         const mode = b.dataset.mode;
         if (mode === 'free') return player.load(null);
         if (!player.song) {
-          toast('Escolha uma música na lista ao lado. ♫');
+          toast('Escolha uma música na lista ao lado.');
           if (window.innerWidth <= 920) openLibrary('all');
           sbFilterPending = mode;
           return;
@@ -556,6 +558,7 @@
     saveSettings();
     document.body.classList.toggle('focus', on);
     $('#setFocus').checked = on;
+    $('#btnFocus').innerHTML = '<svg class="i"><use href="#i-panel-right-' + (on ? 'open' : 'close') + '"/></svg>';
   }
   $('#btnFull').onclick = () => {
     if (document.fullscreenElement) document.exitFullscreen();
@@ -644,16 +647,32 @@
   })();
 
   // ------------------------------------------------------------------ lista de músicas (lateral)
-  const SOURCE_BADGE = { midi: 'MIDI', ai: 'IA', sheet: 'LETRAS', rec: 'GRAVAÇÃO', notation: 'NOTAÇÃO' };
+  const SOURCE_BADGE = { midi: 'midi', ai: 'ia', sheet: 'letras', rec: 'gravação', notation: 'notação' };
   let sbFilter = 'all';
   let sbFilterPending = null;
-  const CAT_HUE = { facil: 178, festa: 300, classica: 222 };
-  function coverFor(s) {
-    const hue = s.source === 'builtin' ? CAT_HUE[s.cat] || 210 : s.source === 'ai' ? 255 : 32;
-    const clean = s.title.replace(/^Aquecimento:\s*/i, '').replace(/^[^A-Za-zÀ-ú]+/, '');
-    const letter = (clean[0] || '♪').toUpperCase();
-    return '<span class="cover" style="--h:' + hue + '">' + esc(letter) + '</span>';
+  // miniatura: um pedacinho do piano roll da própria música
+  const thumbCache = new Map();
+  function thumbFor(s) {
+    const key = s.id + ':' + s.notes.length;
+    if (thumbCache.has(key)) return thumbCache.get(key);
+    const W = 54;
+    const H = 34;
+    const span = Math.min(s.duration, 12) || 1;
+    const [lo, hi] = s.range;
+    const rows = Math.max(12, hi - lo + 1);
+    let rects = '';
+    for (const n of s.notes) {
+      if (n.time > span) break;
+      const x = (n.time / span) * W;
+      const w = Math.max(1, (Math.min(n.duration, span - n.time) / span) * W - 0.5);
+      const y = H - 3 - ((n.midi - lo) / rows) * (H - 6);
+      rects += '<rect x="' + x.toFixed(1) + '" y="' + (y - 1).toFixed(1) + '" width="' + w.toFixed(1) + '" height="2" fill="' + (n.hand === 'L' ? '#6f97ff' : '#2cc4cf') + '"/>';
+    }
+    const html = '<span class="thumb"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + rects + '</svg></span>';
+    thumbCache.set(key, html);
+    return html;
   }
+  const level = (d) => '<span class="level" title="dificuldade ' + d + ' de 5">' + [1, 2, 3, 4, 5].map((k) => '<i class="' + (k <= d ? 'on' : '') + '" style="height:' + (3 + k * 1.6) + 'px"></i>').join('') + '</span>';
   function renderSidebar() {
     const el = $('#songList');
     if (!el) return;
@@ -663,7 +682,7 @@
     else if (sbFilter !== 'all') list = list.filter((s) => s.cat === sbFilter);
     if (q) list = list.filter((s) => (s.title + ' ' + (s.composer || '')).toLowerCase().includes(q));
     if (!list.length) {
-      el.innerHTML = '<div class="lib-empty">' + (sbFilter === 'mine' ? 'Nada aqui ainda. Importe um MIDI, grave algo ou peça para a IA. ✦' : 'Nenhuma música encontrada.') + '</div>';
+      el.innerHTML = '<div class="lib-empty">' + (sbFilter === 'mine' ? 'Nada aqui ainda. Importe um MIDI ou grave algo.' : 'Nenhuma música encontrada.') + '</div>';
       return;
     }
     const cur = player.song && player.song.id;
@@ -673,9 +692,9 @@
         const b = best.challenge || best.practice;
         const badge = SOURCE_BADGE[s.source] ? '<span class="badge' + (s.source === 'ai' ? ' ai' : '') + '">' + SOURCE_BADGE[s.source] + '</span>' : '';
         return (
-          '<button class="song' + (s.id === cur ? ' on' : '') + '" data-id="' + esc(s.id) + '">' + coverFor(s) +
+          '<button class="song' + (s.id === cur ? ' on' : '') + '" data-id="' + esc(s.id) + '">' + thumbFor(s) +
           '<span style="min-width:0"><div class="t">' + esc(s.title) + badge + '</div><div class="s">' + esc(s.composer || '—') + '</div>' +
-          '<div class="m"><span class="dots">' + '●'.repeat(s.difficulty) + '<i>' + '●'.repeat(5 - s.difficulty) + '</i></span><span>' + util.formatTime(s.duration) + '</span>' +
+          '<div class="m">' + level(s.difficulty) + '<span>' + util.formatTime(s.duration) + '</span>' +
           (b ? '<span class="best">' + '★'.repeat(b.stars) + '</span>' : '') + '</div></span></button>'
         );
       })
@@ -701,7 +720,7 @@
   $('#sbImport').onclick = () => openLibrary('import');
   $('#sbAskAi').onclick = () => {
     openChat();
-    $('#chatText').value = 'Adiciona uma música fácil para eu aprender: ';
+    $('#chatText').value = 'Coloca uma música fácil pra eu aprender: ';
     setTimeout(() => {
       $('#chatText').focus();
       autoGrow();
@@ -740,7 +759,7 @@
     if (q) list = list.filter((s) => (s.title + ' ' + (s.composer || '')).toLowerCase().includes(q));
     const el = $('#libList');
     if (!list.length) {
-      el.innerHTML = '<div class="lib-empty">' + (libTab === 'mine' ? 'Você ainda não tem músicas. Importe um MIDI, cole uma partitura de letras, grave algo ou peça para a IA. ✦' : 'Nada encontrado.') + '</div>';
+      el.innerHTML = '<div class="lib-empty">' + (libTab === 'mine' ? 'Nenhuma música sua ainda. Importe um MIDI, cole uma partitura de letras ou grave algo.' : 'Nada encontrado.') + '</div>';
       return;
     }
     el.innerHTML = list
@@ -752,12 +771,12 @@
         const mine = s.source !== 'builtin';
         return (
           '<div class="lib-row" data-id="' + esc(s.id) + '">' +
-          '<span class="diff">' + '●'.repeat(s.difficulty) + '<span class="off">' + '●'.repeat(5 - s.difficulty) + '</span></span>' +
+          thumbFor(s) +
           '<div style="min-width:0"><div class="lib-title">' + esc(s.title) + badge + '</div><div class="lib-sub">' + esc(s.composer || '') + (s.composer ? ' · ' : '') + s.notes.length + ' notas</div></div>' +
           '<span class="lib-dur">' + util.formatTime(s.duration) + '</span>' +
           '<span class="lib-best">' + bestTxt + '</span>' +
-          '<div class="lib-actions"><button class="tb" data-act="watch">OUVIR</button><button class="tb" data-act="practice">APRENDER</button><button class="tb" data-act="challenge">JOGAR</button>' +
-          (mine ? '<button class="tb" data-act="dl" title="Baixar .mid">⬇</button><button class="tb" data-act="del" title="Apagar">✕</button>' : '') +
+          '<div class="lib-actions"><button class="tb" data-act="watch">Ouvir</button><button class="tb" data-act="practice">Aprender</button><button class="tb" data-act="challenge">Jogar</button>' +
+          (mine ? '<button class="tb" data-act="dl" title="Baixar .mid"><svg class="i"><use href="#i-download"/></svg></button><button class="tb" data-act="del" title="Apagar"><svg class="i"><use href="#i-trash-2"/></svg></button>' : '') +
           '</div></div>'
         );
       })
@@ -788,7 +807,7 @@
     let last = null;
     for (const f of files) {
       if (/\.(mp3|wav|ogg|m4a|flac|aac)$/i.test(f.name) || /^audio\/(?!midi|x-midi)/.test(f.type)) {
-        toast('"' + f.name + '" é áudio. O Pianeon lê arquivos MIDI (.mid). Converta o áudio para MIDI ou peça a música para a IA.', 'warn');
+        toast('"' + f.name + '" é um arquivo de áudio. Aqui só entra MIDI (.mid).', 'warn');
         continue;
       }
       try {
@@ -803,8 +822,8 @@
     }
     if (last) {
       toast('"' + last.title + '" adicionada (' + last.notes.length + ' notas).', null, [
-        { label: 'OUVIR', fn: () => loadSong(last, 'watch') },
-        { label: 'APRENDER', fn: () => loadSong(last, 'practice') },
+        { label: 'Ouvir', fn: () => loadSong(last, 'watch') },
+        { label: 'Aprender', fn: () => loadSong(last, 'practice') },
       ]);
       if ($('#mLibrary').classList.contains('open')) {
         setLibTab('mine');
@@ -850,7 +869,7 @@
     const song = songs.parseVPSheet(txt, { bpm: Number($('#vpBpm').value) || 100, title: $('#vpTitle').value.trim() || 'Partitura de letras' });
     if (!song.notes.length) return toast('Não encontrei notas nessa partitura.', 'warn');
     songs.library.add(song);
-    toast('"' + song.title + '" adicionada.', null, [{ label: 'PRATICAR', fn: () => loadSong(song, 'practice') }]);
+    toast('"' + song.title + '" adicionada.', null, [{ label: 'Aprender', fn: () => loadSong(song, 'practice') }]);
     $('#vpText').value = '';
   };
   $('#ntAdd').onclick = () => {
@@ -858,7 +877,7 @@
     if (song.errors && song.errors.length) toast(song.errors.slice(0, 2).join(' · '), 'warn');
     if (!song.notes.length) return;
     songs.library.add(song);
-    toast('"' + song.title + '" adicionada.', null, [{ label: 'PRATICAR', fn: () => loadSong(song, 'practice') }]);
+    toast('"' + song.title + '" adicionada.', null, [{ label: 'Aprender', fn: () => loadSong(song, 'practice') }]);
   };
 
   async function downloadMidiUrl(url, title) {
@@ -887,7 +906,7 @@
     const url = $('#urlInput').value.trim();
     try {
       const song = await downloadMidiUrl(url);
-      toast('"' + song.title + '" baixada!', null, [{ label: 'PRATICAR', fn: () => loadSong(song, 'practice') }]);
+      toast('"' + song.title + '" baixada.', null, [{ label: 'Aprender', fn: () => loadSong(song, 'practice') }]);
       $('#urlInput').value = '';
     } catch (e) {
       toast('Não deu para baixar: ' + e.message, 'err');
@@ -943,7 +962,7 @@
   };
   $('#kbReset').onclick = () => {
     keymap.setPreset('full');
-    toast('Mapa padrão (teclado inteiro) restaurado.');
+    toast('Voltou para o mapa padrão.');
   };
   bindKbPointer(previewEl);
   $('#kbChange').onclick = () => openKeys();
@@ -951,7 +970,7 @@
     settings.kbCollapsed = !settings.kbCollapsed;
     saveSettings();
     $('#keysArea').classList.toggle('collapsed', settings.kbCollapsed);
-    $('#kbToggle').textContent = settings.kbCollapsed ? '▴ MOSTRAR' : '▾ OCULTAR';
+    $('#kbToggle').textContent = settings.kbCollapsed ? 'Mostrar' : 'Ocultar';
     if (!settings.kbCollapsed) sizeKb(kbEl);
   };
 
@@ -1025,9 +1044,9 @@
     } else labelKb(kbEl);
     prevHint = new Set();
     prevAuto = new Set();
-    $('#presetName').textContent = 'SEU TECLADO: ' + keymap.PRESETS[keymap.preset].name.toUpperCase() + ' · ' + keymap.LAYOUTS[keymap.layout].name.split(' (')[0];
+    $('#presetName').textContent = keymap.PRESETS[keymap.preset].name + ', ' + keymap.LAYOUTS[keymap.layout].name.split(' (')[0];
     $('#keysHint').textContent = PRESET_HINT[keymap.preset] || '';
-    $('#octInd').textContent = 'OITAVA ' + (keymap.octave > 0 ? '+' : '') + keymap.octave;
+    $('#octInd').textContent = 'oitava ' + (keymap.octave > 0 ? '+' : '') + keymap.octave;
     player.refold();
     if ($('#mKeys').classList.contains('open')) renderKeysModal();
   });
@@ -1045,7 +1064,7 @@
   $$('#setTabs button').forEach((b) => (b.onclick = () => setSetTab(b.dataset.tab)));
 
   function fillSettings() {
-    $('#setInstrument').innerHTML = PN.INSTRUMENTS.map((i) => '<option value="' + i.id + '"' + (audio.instrument === i.id ? ' selected' : '') + '>' + i.icon + ' ' + esc(i.name) + '</option>').join('');
+    $('#setInstrument').innerHTML = PN.INSTRUMENTS.map((i) => '<option value="' + i.id + '"' + (audio.instrument === i.id ? ' selected' : '') + '>' + esc(i.name) + '</option>').join('');
     $('#setVolume').value = Math.round(audio.volume * 100);
     $('#setReverb').value = Math.round(audio.reverbAmount * 100);
     $('#setMetro').checked = player.metronome;
@@ -1109,7 +1128,7 @@
   };
   $('#midiConnect').onclick = async () => {
     const ok = await midi.input.init();
-    toast(ok ? 'Teclado MIDI pronto. Toque nele!' : 'Não foi possível acessar o MIDI (permissão negada ou navegador sem suporte).', ok ? null : 'warn');
+    toast(ok ? 'Teclado MIDI pronto.' : 'Não deu para acessar o MIDI (permissão negada ou navegador sem suporte).', ok ? null : 'warn');
     fillSettings();
   };
 
@@ -1190,13 +1209,13 @@
   const chatEl = $('#chat');
   const logEl = $('#chatLog');
   function updateAiLabel() {
-    $('#aiLabel').textContent = ai.isReady() ? ai.label() : 'NÃO CONFIGURADA — toque em ⚙';
+    $('#aiLabel').textContent = ai.isReady() ? ai.label() : 'ainda não configurado';
   }
   function openChat() {
     chatEl.classList.add('open');
     updateAiLabel();
     if (!logEl.children.length) {
-      addMsg('sys', ai.isReady() ? 'Converse comigo enquanto toca. Aperte TAB para falar por voz.' : 'Conecte a sua IA em ⚙ (Claude, OpenAI, Gemini, Ollama…). A chave fica só neste navegador.');
+      addMsg('sys', ai.isReady() ? 'Pode falar comigo enquanto toca. Tab liga o microfone.' : 'Para conversar, conecte uma IA (Claude, OpenAI, Gemini, Ollama…) no botão de ajustes acima. A chave fica só neste navegador.');
     }
   }
   function closeChat() {
@@ -1240,11 +1259,11 @@
   }
   const TOOL_LABEL = {
     add_song: (i) => 'adicionando "' + (i.title || 'música') + '"',
-    download_midi: () => 'baixando MIDI',
+    download_midi: () => 'baixando o MIDI',
     list_songs: () => 'olhando a biblioteca',
-    start_song: (i) => 'abrindo ' + (i.song || 'música'),
-    get_status: () => 'vendo como você está indo',
-    set_options: () => 'ajustando o app',
+    start_song: (i) => 'abrindo ' + (i.song || 'a música'),
+    get_status: () => 'vendo como você foi',
+    set_options: () => 'mudando os ajustes',
   };
 
   function appContext() {
@@ -1287,7 +1306,7 @@
         cur = null;
         const chip = document.createElement('div');
         chip.className = 'tool-chip';
-        chip.textContent = '♪ ' + (TOOL_LABEL[name] ? TOOL_LABEL[name](input) : name) + '…';
+        chip.textContent = (TOOL_LABEL[name] ? TOOL_LABEL[name](input) : name) + '…';
         logEl.appendChild(chip);
         chip._name = name;
         logEl._lastChip = chip;
@@ -1297,7 +1316,7 @@
         const chip = logEl._lastChip;
         if (!chip) return;
         const ok = !(out && out.ok === false);
-        chip.textContent = (ok ? '✓ ' : '✕ ') + (TOOL_LABEL[name] ? TOOL_LABEL[name](input) : name) + (ok ? '' : ' — ' + ((out && out.error) || 'falhou'));
+        chip.textContent = (TOOL_LABEL[name] ? TOOL_LABEL[name](input) : name) + (ok ? ' ✓' : ': ' + ((out && out.error) || 'falhou'));
         chip.classList.toggle('err', !ok);
       },
       done: () => {
@@ -1339,7 +1358,7 @@
   });
   function toggleMic() {
     if (!voice.supported) {
-      toast('Reconhecimento de voz não é suportado neste navegador (use Chrome ou Edge).', 'warn');
+      toast('Este navegador não reconhece voz. No Chrome ou no Edge funciona.', 'warn');
       return;
     }
     openChat();
@@ -1369,16 +1388,16 @@
       songs.library.add(song);
       if (i.open_mode && i.open_mode !== 'none') loadSong(song, i.open_mode);
       else
-        toast('✦ IA adicionou "' + song.title + '"', null, [
-          { label: 'OUVIR', fn: () => loadSong(song, 'watch') },
-          { label: 'APRENDER', fn: () => loadSong(song, 'practice') },
+        toast('O assistente adicionou "' + song.title + '"', null, [
+          { label: 'Ouvir', fn: () => loadSong(song, 'watch') },
+          { label: 'Aprender', fn: () => loadSong(song, 'practice') },
         ]);
       return { ok: true, id: song.id, notas: song.notes.length, duracao_s: Math.round(song.duration * 10) / 10, avisos: (song.errors || []).slice(0, 5) };
     },
     download_midi: async (i) => {
       try {
         const song = await downloadMidiUrl(i.url, i.title);
-        toast('✦ IA baixou "' + song.title + '"', null, [{ label: 'PRATICAR', fn: () => loadSong(song, 'practice') }]);
+        toast('O assistente baixou "' + song.title + '"', null, [{ label: 'Aprender', fn: () => loadSong(song, 'practice') }]);
         return { ok: true, id: song.id, titulo: song.title, notas: song.notes.length, duracao_s: Math.round(song.duration) };
       } catch (e) {
         return { ok: false, error: e.message };
@@ -1428,22 +1447,22 @@
   // ------------------------------------------------------------------ resultado
   function showResults(res) {
     const s = res.stats;
-    $('#resTitle').textContent = (res.mode === 'challenge' ? 'JOGAR' : 'APRENDER') + ' — ' + res.song.title.toUpperCase();
+    $('#resTitle').textContent = res.song.title;
     const grid =
       res.mode === 'challenge'
-        ? [['PERFEITO', s.perfect], ['ÓTIMO', s.great], ['BOM', s.good], ['ERROU', s.miss], ['NOTA ERRADA', s.wrong], ['MAIOR COMBO', s.maxCombo]]
-        : [['CERTAS', s.correct], ['ERRADAS', s.wrong], ['MAIOR SEQUÊNCIA', s.maxCombo]];
+        ? [['perfeito', s.perfect], ['ótimo', s.great], ['bom', s.good], ['perdidas', s.miss], ['notas erradas', s.wrong], ['maior combo', s.maxCombo]]
+        : [['certas', s.correct], ['erradas', s.wrong], ['maior sequência', s.maxCombo]];
     $('#resBody').innerHTML =
       '<div class="res-stars">' + '★'.repeat(res.stars) + '<span style="opacity:.25">' + '★'.repeat(5 - res.stars) + '</span></div>' +
       '<div class="res-big">' + (res.mode === 'challenge' ? String(s.score).padStart(7, '0') : Math.round(res.accuracy * 100) + '%') + '</div>' +
-      '<div class="res-sub">' + (res.mode === 'challenge' ? 'PRECISÃO ' + Math.round(res.accuracy * 100) + '%' : 'DE ACERTO') + ' · VELOCIDADE ' + Math.round(res.speed * 100) + '%</div>' +
-      (res.newBest ? '<div class="res-new">★ NOVO RECORDE!</div>' : '') +
+      '<div class="res-sub">' + (res.mode === 'challenge' ? 'precisão de ' + Math.round(res.accuracy * 100) + '%' : 'de acerto') + ', velocidade ' + Math.round(res.speed * 100) + '%</div>' +
+      (res.newBest ? '<div class="res-new">Novo recorde</div>' : '') +
       '<div class="res-grid">' + grid.map(([k, v]) => '<div><b>' + v + '</b>' + k + '</div>').join('') + '</div>' +
       '<div class="row end">' +
-      '<button class="tb" id="resAi">✦ PEDIR DICA À IA</button>' +
-      '<button class="tb" id="resLib">MÚSICAS</button>' +
-      (res.mode === 'practice' ? '<button class="tb" id="resNext">AGORA, JOGAR ▸</button>' : '') +
-      '<button class="tb" id="resAgain" style="background:var(--ink);color:var(--panel)">REPETIR</button></div>';
+      '<button class="tb" id="resAi">Pedir uma dica</button>' +
+      '<button class="tb" id="resLib">Músicas</button>' +
+      (res.mode === 'practice' ? '<button class="tb" id="resNext">Tentar no Jogar</button>' : '') +
+      '<button class="tb" id="resAgain" style="background:var(--ink);color:var(--panel);border-color:var(--ink)">Repetir</button></div>';
     openModal('mResults');
     $('#resAgain').onclick = () => loadSong(res.song, res.mode, { autostart: true });
     $('#resLib').onclick = () => {
@@ -1458,20 +1477,20 @@
   }
 
   // ------------------------------------------------------------------ status / rodapé
-  bus.on('samples:progress', (d, t) => ($('#sampleInd').textContent = 'PIANO ' + d + '/' + t));
-  bus.on('samples:ready', (failed) => ($('#sampleInd').textContent = failed ? 'PIANO ✓ (' + failed + ' falhas)' : 'PIANO DE CAUDA ✓'));
+  bus.on('samples:progress', (d, t) => ($('#sampleInd').textContent = 'carregando piano ' + d + '/' + t));
+  bus.on('samples:ready', (failed) => ($('#sampleInd').textContent = failed ? 'piano de cauda (' + failed + ' falhas)' : 'piano de cauda'));
   bus.on('samples:error', () => {
-    $('#sampleInd').textContent = 'PIANO SINTETIZADO';
-    toast('Sem acesso aos samples do piano — usando o piano sintetizado.', 'warn');
+    $('#sampleInd').textContent = 'piano sintetizado';
+    toast('Sem internet para o piano de cauda; usando o piano sintetizado.', 'warn');
   });
   bus.on('instrument', (id) => {
     const inst = PN.INSTRUMENTS.find((i) => i.id === id);
-    if (id !== 'grand') $('#sampleInd').textContent = inst.name.toUpperCase();
-    else if (audio.sampleState === 'ready') $('#sampleInd').textContent = 'PIANO DE CAUDA ✓';
+    if (id !== 'grand') $('#sampleInd').textContent = inst.name.toLowerCase();
+    else if (audio.sampleState === 'ready') $('#sampleInd').textContent = 'piano de cauda';
   });
   bus.on('midi:devices', (list) => {
     $('#midiInd').classList.toggle('hidden', !list.length);
-    $('#midiInd').textContent = 'MIDI: ' + list.join(', ').toUpperCase();
+    $('#midiInd').textContent = 'midi: ' + list.join(', ');
     if (list.length) toast('Teclado MIDI conectado: ' + list.join(', '));
   });
 
@@ -1481,9 +1500,9 @@
       const t = util.clamp(player.t, 0, s.duration);
       $('#timeText').textContent = util.formatTime(t) + ' / ' + util.formatTime(s.duration);
     } else {
-      $('#timeText').textContent = util.formatTime(player.wall()) + ' LIVRE';
+      $('#timeText').textContent = util.formatTime(player.wall());
     }
-    if (recorder.active) $('#recInd').textContent = '● REC ' + util.formatTime(recorder.now());
+    if (recorder.active) $('#recInd').textContent = '● rec ' + util.formatTime(recorder.now());
   }
 
   // ------------------------------------------------------------------ laço principal
@@ -1517,9 +1536,9 @@
     return [lo, hi];
   }
   const MODE_HINT = {
-    watch: 'OUÇA E VEJA QUAIS TECLAS APERTAR',
-    practice: 'TOQUE A TECLA QUE PISCA — A MÚSICA ESPERA VOCÊ',
-    challenge: 'APERTE QUANDO A NOTA ENCOSTAR NA LINHA',
+    watch: 'Ouça e veja quais teclas apertar',
+    practice: 'Toque a tecla que pisca. A música espera você.',
+    challenge: 'Aperte quando a nota encostar na linha',
   };
 
   function buildState(dt) {
@@ -1554,7 +1573,7 @@
     let waitingText = '';
     if (player.state === 'waiting') {
       const g = player.groups[player.waitIdx];
-      if (g) waitingText = 'TOQUE: ' + [...g.pending].map((m) => noteName(m) + (keymap.keyLabelFor(m) ? ' [' + keymap.keyLabelFor(m) + ']' : '')).join('  ');
+      if (g) waitingText = 'Toque ' + [...g.pending].map((m) => noteName(m) + (keymap.keyLabelFor(m) ? ' (' + keymap.keyLabelFor(m) + ')' : '')).join(' + ');
     }
     let countdown = '';
     if (song && player.state === 'playing' && t < firstTime) {
@@ -1584,7 +1603,7 @@
     }
     const ts = song ? song.timeSig : 4;
     const rollWindow = song ? util.clamp(beats.timeAt(4 * ts) - beats.timeAt(0), 3, 9) : 8;
-    const hk = player.hands.R && player.hands.L ? 'AMBAS AS MÃOS' : player.hands.R ? 'MÃO DIREITA' : 'MÃO ESQUERDA';
+    const hk = player.hands.R && player.hands.L ? 'as duas mãos' : player.hands.R ? 'mão direita' : 'mão esquerda';
     return {
       song,
       mode: player.mode,
@@ -1617,7 +1636,7 @@
       noteName,
       keyLabel: (m) => keymap.keyLabelFor(m),
       showKeyOnNotes: settings.keyOnNotes,
-      trackText: song ? (player.mode === 'watch' ? 'TODAS' : hk) : 'TECLADO ' + keymap.PRESETS[keymap.preset].name.toUpperCase(),
+      trackText: song ? (player.mode === 'watch' ? 'as duas mãos' : hk) : keymap.PRESETS[keymap.preset].name.toLowerCase(),
       waitingText,
       countdown,
       pianoRange: pianoRange(song),
@@ -1652,7 +1671,7 @@
     kbEl._layout = keymap.layout;
     bindKbPointer(kbEl);
     $('#keysArea').classList.toggle('collapsed', !!settings.kbCollapsed);
-    $('#kbToggle').textContent = settings.kbCollapsed ? '▴ MOSTRAR' : '▾ OCULTAR';
+    $('#kbToggle').textContent = settings.kbCollapsed ? 'Mostrar' : 'Ocultar';
     visuals.init({
       highway: $('#cvHighway'),
       dial: $('#cvDial'),

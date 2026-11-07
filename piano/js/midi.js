@@ -6,8 +6,52 @@
 
   const GM_NAMES = ['Piano', 'Piano', 'Piano', 'Piano', 'Piano Elétrico', 'Piano Elétrico', 'Cravo', 'Clavinet'];
 
-  /** Converte um ArrayBuffer .mid em { name, notes[], tracks[], duration, bpm }. */
+  /**
+   * Lê o arquivo com a biblioteca @tonejs/midi (vendor/midi/Midi.js, licença MIT).
+   * Se ela não estiver carregada ou não entender o arquivo (ex.: RMID), usa o leitor próprio abaixo.
+   */
   function parseMidi(arrayBuffer) {
+    if (window.Midi) {
+      try {
+        return parseWithToneMidi(arrayBuffer);
+      } catch (e) {
+        /* cai no leitor próprio */
+      }
+    }
+    return parseMidiFallback(arrayBuffer);
+  }
+
+  function parseWithToneMidi(arrayBuffer) {
+    const m = new window.Midi(arrayBuffer);
+    const notes = [];
+    const tracks = [];
+    m.tracks.forEach((tr, ti) => {
+      if (tr.channel === 9 || (tr.instrument && tr.instrument.percussion)) return; // bateria
+      let sum = 0;
+      for (const n of tr.notes) {
+        notes.push({ midi: n.midi, time: n.time, duration: Math.max(0.03, n.duration), velocity: n.velocity, track: ti });
+        sum += n.midi;
+      }
+      if (tr.notes.length)
+        tracks.push({
+          index: ti,
+          name: tr.name || 'Faixa ' + (ti + 1),
+          channel: tr.channel,
+          instrument: tr.instrument ? tr.instrument.name : '',
+          noteCount: tr.notes.length,
+          avgPitch: sum / tr.notes.length,
+        });
+    });
+    if (!notes.length && !m.tracks.length) throw new Error('vazio');
+    notes.sort((a, b) => a.time - b.time || a.midi - b.midi);
+    const duration = notes.reduce((mx, n) => Math.max(mx, n.time + n.duration), 0);
+    const tempo = m.header.tempos && m.header.tempos[0];
+    const named = m.tracks.find((t) => t.name);
+    return { format: 1, name: (m.header.name || (named && named.name) || '').trim(), notes, tracks, duration, bpm: Math.round(tempo ? tempo.bpm : 120) };
+  }
+
+  /** Leitor próprio: converte um ArrayBuffer .mid em { name, notes[], tracks[], duration, bpm }. */
+  function parseMidiFallback(arrayBuffer) {
     const data = new DataView(arrayBuffer);
     let p = 0;
     const u8 = () => data.getUint8(p++);
@@ -293,5 +337,5 @@
     },
   };
 
-  PN.midi = { parseMidi, assignHands, writeMidi, input: midiInput };
+  PN.midi = { parseMidi, parseMidiFallback, assignHands, writeMidi, input: midiInput };
 })();

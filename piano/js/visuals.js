@@ -4,7 +4,8 @@
   const PN = window.PN;
   const { util, bus, audio } = PN;
 
-  const MONO = '"IBM Plex Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  const MONO = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  const SANS = '"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif';
   let C = {};
   function readColors() {
     const cs = getComputedStyle(document.documentElement);
@@ -12,7 +13,7 @@
     C = {
       bg: v('bg'), panel: v('panel'), panel2: v('panel-2'), line: v('line'), grid: v('grid'), grid2: v('grid-2'),
       ink: v('ink'), muted: v('muted'), teal: v('teal'), tealSoft: v('teal-soft'), blue: v('blue'), blueSoft: v('blue-soft'),
-      purple: v('purple'), red: v('red'), green: v('green'), amber: v('amber'), dark: v('dark'), darkInk: v('dark-ink'), bars: v('bars'),
+      purple: v('accent'), accent: v('accent'), red: v('red'), green: v('green'), amber: v('amber'), dark: v('dark'), darkInk: v('dark-ink'), bars: v('bars'),
     };
   }
 
@@ -53,8 +54,8 @@
     }
   }
 
-  function label(ctx, text, x, y, color, size = 10, weight = 500, align = 'left') {
-    ctx.font = weight + ' ' + size + 'px ' + MONO;
+  function label(ctx, text, x, y, color, size = 10, weight = 500, align = 'left', family) {
+    ctx.font = weight + ' ' + size + 'px ' + (family || MONO);
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = 'alphabetic';
@@ -159,7 +160,7 @@
     ctx.arc(cx, cy, rc, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    label(ctx, 'COMPASSO', cx, cy - rc * 0.28, C.muted, Math.max(7, rc * 0.2), 500, 'center');
+    label(ctx, 'COMPASSO', cx, cy - rc * 0.28, C.muted, Math.max(7, rc * 0.2), 650, 'center', SANS);
     label(ctx, String(Math.max(0, bar)), cx, cy + rc * 0.52, C.ink, Math.max(12, rc * 0.78), 600, 'center');
 
     // ponteiro
@@ -257,7 +258,7 @@
       const xa = Math.max(labelW, x0 + (l.start - now) * pps);
       const xb = x0 + (end - now) * pps;
       const nh = Math.max(2, rowH * 0.4);
-      ctx.fillStyle = C.purple;
+      ctx.fillStyle = C.accent;
       ctx.fillRect(xa, yOf(l.midi) + (rowH - nh) / 2, Math.max(2, xb - xa), nh);
     }
 
@@ -518,8 +519,8 @@
   // ------------------------------------------------------------------ efeitos (partículas)
   const fx = { parts: [], flash: [] };
   function burst(midi, kind) {
-    const col = { perfect: C.teal, great: C.blue, good: C.purple, hit: C.green, note: C.purple, wrong: C.red, miss: C.red }[kind] || C.purple;
-    const n = kind === 'note' ? 7 : kind === 'wrong' || kind === 'miss' ? 5 : 18;
+    const col = { perfect: C.teal, great: C.blue, good: C.accent, hit: C.green, note: C.accent, wrong: C.red, miss: C.red }[kind] || C.accent;
+    const n = kind === 'note' ? 3 : kind === 'wrong' || kind === 'miss' ? 4 : 10;
     for (let i = 0; i < n; i++) {
       const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.95;
       const sp = 70 + Math.random() * (kind === 'note' ? 110 : 230);
@@ -562,13 +563,6 @@
       ctx.lineTo(x4, y3);
       ctx.closePath();
     };
-
-    // brilho no horizonte
-    const glow = ctx.createRadialGradient(vx, horizonY + 10, 4, vx, horizonY + 10, trackW * 0.55);
-    glow.addColorStop(0, alpha(C.blue, 0.12));
-    glow.addColorStop(1, alpha(C.blue, 0));
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, w, hitY);
 
     // piso com faixas claras (notas brancas) e escuras (notas pretas)
     const floor = ctx.createLinearGradient(0, horizonY, 0, hitY);
@@ -635,23 +629,16 @@
     for (const i of S.autoLanes) beam(i, C.teal, 0.32);
     for (const [midi] of S.held) {
       const i = S.laneIndex.get(midi);
-      if (i != null) beam(i, C.purple, 0.55);
+      if (i != null) beam(i, C.accent, 0.55);
     }
 
     // notas
-    const pill = (x, y, wdt, hgt, col, glowOn) => {
-      const g = ctx.createLinearGradient(0, y - hgt / 2, 0, y + hgt / 2);
-      g.addColorStop(0, alpha('#ffffff', 0.9));
-      g.addColorStop(0.35, col);
-      g.addColorStop(1, col);
-      if (glowOn) {
-        ctx.shadowColor = col;
-        ctx.shadowBlur = 14;
-      }
-      ctx.fillStyle = g;
-      rrect(ctx, x - wdt / 2, y - hgt / 2, wdt, hgt, hgt / 2);
+    const pill = (x, y, wdt, hgt, col) => {
+      ctx.fillStyle = col;
+      rrect(ctx, x - wdt / 2, y - hgt / 2, wdt, hgt, Math.min(3, hgt / 2));
       ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.fillRect(x - wdt / 2 + 1, y + hgt / 2 - Math.max(1, hgt * 0.18), wdt - 2, Math.max(1, hgt * 0.18));
     };
     if (S.song) {
       const notes = S.notes;
@@ -681,7 +668,7 @@
         const [x, y, s] = proj(xc, dt0);
         const pw = util.clamp(laneW * 0.74 * s, 4, 54);
         const ph = util.clamp(16 * s, 3, 18);
-        pill(x, y, pw, ph, col, s > 0.62);
+        pill(x, y, pw, ph, col);
         if (s > 0.55 && ph >= 12 && S.showKeyOnNotes) {
           const kl = S.keyLabel(nt.playMidi);
           if (kl) label(ctx, kl, x, y + 4, '#ffffff', Math.min(12, ph * 0.75), 700, 'center');
@@ -696,23 +683,19 @@
         const b = now - l.start;
         if (a > LA) continue;
         const xc = laneX(i);
-        ctx.fillStyle = alpha(C.purple, 0.4);
+        ctx.fillStyle = alpha(C.accent, 0.4);
         quad(xc - laneW * 0.15, xc + laneW * 0.15, Math.max(0, a), Math.min(LA, b));
         ctx.fill();
         const [x, y, s] = proj(xc, Math.min(LA, b));
-        pill(x, y, util.clamp(laneW * 0.7 * s, 3, 50), util.clamp(14 * s, 3, 16), C.purple, false);
+        pill(x, y, util.clamp(laneW * 0.7 * s, 3, 50), util.clamp(14 * s, 3, 16), C.accent);
       }
     }
 
     // linha de acerto
     const [hx1] = proj(left, 0);
     const [hx2] = proj(left + trackW, 0);
-    const hg = ctx.createLinearGradient(hx1, 0, hx2, 0);
-    hg.addColorStop(0, alpha(C.teal, 0.85));
-    hg.addColorStop(0.5, alpha(C.blue, 0.85));
-    hg.addColorStop(1, alpha(C.purple, 0.85));
-    ctx.fillStyle = hg;
-    ctx.fillRect(hx1, hitY - 1.5, hx2 - hx1, 3);
+    ctx.fillStyle = C.ink;
+    ctx.fillRect(hx1, hitY - 1, hx2 - hx1, 2);
 
     // flashes de acerto
     for (const f of fx.flash) {
@@ -723,7 +706,7 @@
       if (a <= 0) continue;
       const xc = laneX(i);
       const g = ctx.createRadialGradient(xc, hitY, 2, xc, hitY, laneW * 0.9);
-      g.addColorStop(0, alpha(f.col, 0.55 * a));
+      g.addColorStop(0, alpha(f.col, 0.3 * a));
       g.addColorStop(1, alpha(f.col, 0));
       ctx.fillStyle = g;
       ctx.fillRect(xc - laneW, hitY - laneW, laneW * 2, laneW * 2);
@@ -735,7 +718,7 @@
     const pulse = 0.5 + 0.5 * Math.sin(S.now * 8);
     for (let i = 0; i < n; i++) {
       const xc = laneX(i);
-      const r = util.clamp(laneW * 0.34, 3, 15);
+      const r = util.clamp(laneW * 0.32, 3, 13);
       const midi = lanes[i];
       const held = S.held.has(midi);
       const autoOn = S.autoLanes.has(i);
@@ -748,25 +731,20 @@
         ctx.stroke();
       }
       ctx.lineWidth = 1.6;
-      ctx.strokeStyle = held ? C.purple : hint ? C.blue : C.line;
-      ctx.fillStyle = held ? C.purple : autoOn ? C.teal : C.panel;
-      if (held) {
-        ctx.shadowColor = C.purple;
-        ctx.shadowBlur = 14;
-      }
+      ctx.strokeStyle = held ? C.accent : hint ? C.blue : C.line;
+      ctx.fillStyle = held ? C.accent : autoOn ? C.teal : C.panel;
       ctx.beginPath();
       ctx.arc(xc, hitY, r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
       ctx.stroke();
-      if (showLabels || midi % 12 === 0 || held) label(ctx, S.noteName(midi), xc, hitY - r - 8, held ? C.purple : C.muted, showLabels ? 10 : 9, 500, 'center');
+      if (showLabels || midi % 12 === 0 || held) label(ctx, S.noteName(midi), xc, hitY - r - 8, held ? C.accent : C.muted, showLabels ? 10 : 9, 500, 'center');
       if (laneW >= 15 || held) {
         const kl = S.keyLabel(midi);
         if (kl) {
           ctx.font = '600 10px ' + MONO;
           const tw = Math.max(15, ctx.measureText(kl).width + 8);
-          ctx.fillStyle = held ? C.purple : C.panel;
-          ctx.strokeStyle = held ? C.purple : C.line;
+          ctx.fillStyle = held ? C.accent : C.panel;
+          ctx.strokeStyle = held ? C.accent : C.line;
           ctx.lineWidth = 1;
           rrect(ctx, xc - tw / 2, hitY + r + 7, tw, 16, 4);
           ctx.fill();
@@ -796,7 +774,7 @@
     ctx.globalAlpha = 1;
 
     // textos de julgamento
-    const jc = { perfect: C.teal, great: C.blue, good: C.purple, miss: C.red, wrong: C.red, hit: C.green };
+    const jc = { perfect: C.teal, great: C.blue, good: C.accent, miss: C.red, wrong: C.red, hit: C.green };
     for (const pp of S.popups) {
       const i = S.laneIndex.get(pp.midi);
       const x = i != null ? laneX(i) : vx;
@@ -806,51 +784,49 @@
     }
     ctx.globalAlpha = 1;
 
-    // painel de informações
+    // placar
     const st = S.stats;
+    const cap = (t, x, al) => label(ctx, t, x, 20, C.muted, 10, 650, al, SANS);
+    const val = (t, x, al, col) => label(ctx, t, x, 41, col || C.ink, 20, 600, al);
     if (S.mode === 'challenge') {
-      label(ctx, 'PONTOS', 16, 22, C.muted, 10, 600);
-      label(ctx, String(Math.round(st.score)).padStart(7, '0'), 16, 40, C.ink, 18, 700);
-      label(ctx, 'COMBO', w - 16, 22, C.muted, 10, 600, 'right');
-      label(ctx, st.combo + '  ×' + S.multiplier, w - 16, 40, C.blue, 18, 700, 'right');
+      cap('PONTOS', 16, 'left');
+      val(String(Math.round(st.score)).padStart(7, '0'), 16, 'left');
+      cap('COMBO', w - 16, 'right');
+      val(st.combo + ' ×' + S.multiplier, w - 16, 'right', st.combo >= 10 ? C.accent : C.ink);
     } else if (S.mode === 'practice') {
-      label(ctx, 'CERTAS / ERRADAS', 16, 22, C.muted, 10, 600);
-      label(ctx, st.correct + ' / ' + st.wrong, 16, 40, C.ink, 18, 700);
-      label(ctx, 'SEGUIDAS', w - 16, 22, C.muted, 10, 600, 'right');
-      label(ctx, String(st.combo), w - 16, 40, C.blue, 18, 700, 'right');
+      cap('CERTAS / ERRADAS', 16, 'left');
+      val(st.correct + ' / ' + st.wrong, 16, 'left');
+      cap('EM SEQUÊNCIA', w - 16, 'right');
+      val(String(st.combo), w - 16, 'right');
     } else {
-      label(ctx, PN.MODES[S.mode].name, 16, 22, C.muted, 10, 600);
-      label(ctx, S.song ? 'OUVINDO' : 'TOQUE À VONTADE', 16, 40, C.ink, 15, 700);
+      cap(PN.MODES[S.mode].name.toUpperCase(), 16, 'left');
     }
-    if (S.hint && !S.waitingText) {
-      ctx.font = '500 12px ' + MONO;
-      label(ctx, S.hint, vx, 26, C.muted, 11.5, 500, 'center');
-    }
-    label(ctx, S.trackText, 16, h - 10, C.muted, 10, 500);
-    label(ctx, Math.round(S.bpm * (S.song ? S.speed : 1)) + ' BPM', w - 16, h - 10, C.muted, 10, 500, 'right');
+    if (S.hint && !S.waitingText) label(ctx, S.hint, vx, 24, C.muted, 13, 500, 'center', SANS);
+    label(ctx, S.trackText, 16, h - 10, C.muted, 11.5, 500, 'left', SANS);
+    label(ctx, Math.round(S.bpm * (S.song ? S.speed : 1)) + ' bpm', w - 16, h - 10, C.muted, 10.5, 500, 'right');
 
     if (S.waitingText) {
-      ctx.font = '600 13px ' + MONO;
+      ctx.font = '650 14px ' + SANS;
       const tw = ctx.measureText(S.waitingText).width + 28;
-      ctx.fillStyle = alpha(C.blue, 0.12 + 0.06 * pulse);
-      ctx.strokeStyle = C.blue;
-      ctx.lineWidth = 1.5;
+      ctx.fillStyle = C.panel;
+      ctx.strokeStyle = C.ink;
+      ctx.lineWidth = 1;
       const wy = w < 640 ? 56 : 14; // em telas estreitas, abaixo do placar
-      rrect(ctx, vx - tw / 2, wy, tw, 28, 8);
+      rrect(ctx, vx - tw / 2, wy, tw, 30, 5);
       ctx.fill();
       ctx.stroke();
-      label(ctx, S.waitingText, vx, wy + 19, C.blue, 13, 600, 'center');
+      label(ctx, S.waitingText, vx, wy + 20, C.ink, 14, 650, 'center', SANS);
     }
     if (S.countdown) {
       ctx.globalAlpha = 0.85;
-      label(ctx, S.countdown, vx, h * 0.5, C.ink, Math.min(110, h * 0.25), 700, 'center');
+      label(ctx, S.countdown, vx, h * 0.5, C.ink, Math.min(110, h * 0.25), 600, 'center');
       ctx.globalAlpha = 1;
     }
     if (S.state === 'paused') {
       ctx.fillStyle = alpha(C.panel, 0.8);
       rrect(ctx, vx - 170, h * 0.42 - 22, 340, 36, 10);
       ctx.fill();
-      label(ctx, '❚❚  PAUSADO — ENTER para continuar', vx, h * 0.42, C.ink, 13, 600, 'center');
+      label(ctx, 'Pausado. Enter continua.', vx, h * 0.42, C.ink, 14, 600, 'center', SANS);
     }
   }
 
@@ -868,7 +844,7 @@
     const blacks = [];
     const bw = ww * 0.6;
     const bh = h * 0.6;
-    const state = (m) => (S.held.has(m) ? C.purple : S.autoMidis.has(m) ? C.teal : S.hintMidis.has(m) ? 'hint' : null);
+    const state = (m) => (S.held.has(m) ? C.accent : S.autoMidis.has(m) ? C.teal : S.hintMidis.has(m) ? 'hint' : null);
     const felt = 4;
     // brancas
     for (const m of whites) {
@@ -944,7 +920,7 @@
     ctx.lineWidth = 1;
     ctx.stroke();
     if (!S.song) {
-      label(ctx, 'MODO LIVRE — escolha uma música na lista para aprender', w / 2, h / 2 + 4, C.muted, 10.5, 500, 'center');
+      label(ctx, 'Modo livre. Escolha uma música na lista para aprender.', w / 2, h / 2 + 4, C.muted, 12, 500, 'center', SANS);
       return;
     }
     const dur = Math.max(1, S.song.duration);

@@ -5,10 +5,10 @@
   const { util, store, bus, audio } = PN;
 
   const MODES = {
-    free: { name: 'LIVRE', explain: 'Toque à vontade! Tudo o que você toca aparece na tela.' },
-    watch: { name: 'OUVIR', explain: 'A música toca sozinha e mostra quais teclas apertar. Ótimo para conhecer a música.' },
-    practice: { name: 'APRENDER', explain: 'A música espera você: ela só continua quando você acerta a tecla que pisca. Sem pressa!' },
-    challenge: { name: 'JOGAR', explain: 'Valendo pontos! Aperte quando a nota encostar na linha. Acertos seguidos aumentam o combo até ×4.' },
+    free: { name: 'Livre', explain: 'Toque à vontade. O que você toca aparece na tela.' },
+    watch: { name: 'Ouvir', explain: 'A música toca sozinha e mostra quais teclas apertar. Ótimo para conhecer a música.' },
+    practice: { name: 'Aprender', explain: 'A música para e espera. Ela só continua quando você acerta a tecla que pisca.' },
+    challenge: { name: 'Jogar', explain: 'Valendo pontos. Aperte quando a nota encostar na linha; acertos seguidos multiplicam os pontos (até ×4).' },
   };
   // Janelas de acerto em segundos reais
   const WIN = { perfect: 0.05, great: 0.1, good: 0.16 };

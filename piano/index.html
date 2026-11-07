@@ -3,59 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pianeon — Piano no Teclado</title>
-<meta name="description" content="Toque piano com o teclado do computador, aprenda músicas como num jogo, importe MIDI e converse com sua própria IA.">
-<meta name="theme-color" content="#e6e8ec">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2315181e'/%3E%3Crect x='12' y='14' width='9' height='36' rx='2' fill='%231aa6b7'/%3E%3Crect x='27' y='14' width='9' height='36' rx='2' fill='%232f6be4'/%3E%3Crect x='42' y='14' width='9' height='36' rx='2' fill='%236a4bd6'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>pianeon</title>
+<meta name="description" content="Piano no teclado do computador: aprenda músicas, importe MIDI e toque com qualquer teclado.">
+<meta name="theme-color" content="#e9e7e3">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='3' width='26' height='26' rx='5' fill='%23161514'/%3E%3Crect x='3' y='22' width='26' height='7' rx='3' fill='%23000'/%3E%3Ccircle cx='22' cy='10' r='3.2' fill='%23ff5a1f'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<!-- Ícones: Lucide (lucide.dev), licença ISC — veja vendor/lucide/LICENSE -->
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="3" width="5" height="18" rx="1" /> <rect x="5" y="3" width="5" height="18" rx="1" /></symbol>
+<symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path d="M3 3v5h5" /></symbol>
+<symbol id="i-keyboard" viewBox="0 0 24 24"><path d="M10 8h.01" /> <path d="M12 12h.01" /> <path d="M14 8h.01" /> <path d="M16 12h.01" /> <path d="M18 8h.01" /> <path d="M6 8h.01" /> <path d="M7 16h10" /> <path d="M8 12h.01" /> <rect width="20" height="16" x="2" y="4" rx="2" /></symbol>
+<symbol id="i-keyboard-music" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2" /> <path d="M6 8h4" /> <path d="M14 8h.01" /> <path d="M18 8h.01" /> <path d="M2 12h20" /> <path d="M6 12v4" /> <path d="M10 12v4" /> <path d="M14 12v4" /> <path d="M18 12v4" /></symbol>
+<symbol id="i-messages-square" viewBox="0 0 24 24"><path d="M16 10a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 14.286V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /> <path d="M20 9a2 2 0 0 1 2 2v10.286a.71.71 0 0 1-1.212.502l-2.202-2.202A2 2 0 0 0 17.172 19H10a2 2 0 0 1-2-2v-1" /></symbol>
+<symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path d="M10 5H3" /> <path d="M12 19H3" /> <path d="M14 3v4" /> <path d="M16 17v4" /> <path d="M21 12h-9" /> <path d="M21 19h-5" /> <path d="M21 5h-7" /> <path d="M8 10v4" /> <path d="M8 12H3" /></symbol>
+<symbol id="i-sun-moon" viewBox="0 0 24 24"><path d="M12 2v2" /> <path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715" /> <path d="M16 12a4 4 0 0 0-4-4" /> <path d="m19 5-1.256 1.256" /> <path d="M20 12h2" /></symbol>
+<symbol id="i-panel-right-close" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /> <path d="M15 3v18" /> <path d="m8 9 3 3-3 3" /></symbol>
+<symbol id="i-panel-right-open" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /> <path d="M15 3v18" /> <path d="m10 15-3-3 3-3" /></symbol>
+<symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3" /> <path d="M21 8V5a2 2 0 0 0-2-2h-3" /> <path d="M3 16v3a2 2 0 0 0 2 2h3" /> <path d="M16 21h3a2 2 0 0 0 2-2v-3" /></symbol>
+<symbol id="i-list-music" viewBox="0 0 24 24"><path d="M16 5H3" /> <path d="M11 12H3" /> <path d="M11 19H3" /> <path d="M21 16V5" /> <circle cx="18" cy="16" r="3" /></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 3v12" /> <path d="m17 8-5-5-5 5" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /> <circle cx="11" cy="11" r="8" /></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 19v3" /> <path d="M19 10v2a7 7 0 0 1-14 0v-2" /> <rect x="9" y="2" width="6" height="13" rx="3" /></symbol>
+<symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7" /> <path d="M12 19V5" /></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /> <path d="m6 6 12 12" /></symbol>
+<symbol id="i-trash-2" viewBox="0 0 24 24"><path d="M10 11v6" /> <path d="M14 11v6" /> <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path d="M3 6h18" /> <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path d="m7 10 5 5 5-5" /></symbol>
+<symbol id="i-metronome" viewBox="0 0 24 24"><path d="M12 11.4V9.1" /> <path d="m12 17 6.59-6.59" /> <path d="m15.05 5.7-.218-.691a3 3 0 0 0-5.663 0L4.418 19.695A1 1 0 0 0 5.37 21h13.253a1 1 0 0 0 .951-1.31L18.45 16.2" /> <circle cx="20" cy="9" r="2" /></symbol>
+<symbol id="i-piano" viewBox="0 0 24 24"><path d="M10 13v4" /> <path d="M14 13v4" /> <path d="M18 13v4" /> <path d="M2 13h20" /> <path d="M22 11.5A3.5 3.5 0 0018.5 8a3.52 3.52 0 01-3.173-2A7 7 0 002 9v10a2 2 0 002 2h16a2 2 0 002-2z" /> <path d="M6 13v4" /></symbol>
+<symbol id="i-headphones" viewBox="0 0 24 24"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></symbol>
+<symbol id="i-graduation-cap" viewBox="0 0 24 24"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /> <path d="M22 10v6" /> <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></symbol>
+<symbol id="i-gamepad-2" viewBox="0 0 24 24"><line x1="6" x2="10" y1="11" y2="11" /> <line x1="8" x2="8" y1="9" y2="13" /> <line x1="15" x2="15.01" y1="12" y2="12" /> <line x1="18" x2="18.01" y1="10" y2="10" /> <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z" /></symbol>
+<symbol id="i-music" viewBox="0 0 24 24"><path d="M21 16V3a1 1 0 0 0-1.28-.96l-10 2.917a1 1 0 0 0-.72.96V19" /> <circle cx="18" cy="16" r="3" /> <circle cx="6" cy="19" r="3" /></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+<symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6" /></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14" /> <path d="M12 5v14" /></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" /></symbol>
+<symbol id="i-circle-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" /> <circle cx="12" cy="12" r="10" /></symbol>
+<symbol id="i-file-music" viewBox="0 0 24 24"><path d="M11.65 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v10.35" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M8 20v-7l3 1.474" /> <circle cx="6" cy="20" r="2" /></symbol>
+</svg>
 <div id="app">
   <header class="topbar">
-    <div class="brand" title="Pianeon">
-      <span class="logo"><i></i><i></i><i></i></span>
-      <span class="brand-name">PIANEON</span>
-    </div>
+    <div class="brand" title="pianeon"><span class="mark" aria-hidden="true"></span><span class="brand-name">pianeon</span></div>
     <div class="seg modes" id="modeSeg" role="group" aria-label="Modo">
-      <button data-mode="free" title="Toque à vontade">LIVRE</button>
-      <button data-mode="watch" title="A música toca sozinha">OUVIR</button>
-      <button data-mode="practice" title="A música espera você acertar">APRENDER</button>
-      <button data-mode="challenge" title="Valendo pontos e combo">JOGAR</button>
+      <button data-mode="free" title="Toque à vontade"><svg class="i"><use href="#i-music"/></svg><span>Livre</span></button>
+      <button data-mode="watch" title="A música toca sozinha"><svg class="i"><use href="#i-headphones"/></svg><span>Ouvir</span></button>
+      <button data-mode="practice" title="A música espera você acertar"><svg class="i"><use href="#i-graduation-cap"/></svg><span>Aprender</span></button>
+      <button data-mode="challenge" title="Valendo pontos"><svg class="i"><use href="#i-gamepad-2"/></svg><span>Jogar</span></button>
     </div>
     <div class="nowplaying">
       <div id="songTitle" class="song-title">Modo livre</div>
-      <div id="songMeta" class="song-meta">toque com o teclado do computador</div>
+      <div id="songMeta" class="song-meta">—</div>
     </div>
     <div class="transport">
-      <button id="btnRestart" class="ib" title="Recomeçar (Backspace)" aria-label="Recomeçar">⟲</button>
-      <button id="btnPlay" class="ib play" title="Tocar / pausar (Enter)" aria-label="Tocar ou pausar">▶</button>
-      <label class="speed" title="Velocidade (setas ↑ ↓)"><span>VEL</span>
+      <button id="btnRestart" class="ib" title="Recomeçar (Backspace)" aria-label="Recomeçar"><svg class="i"><use href="#i-rotate-ccw"/></svg></button>
+      <button id="btnPlay" class="ib play" title="Tocar / pausar (Enter)" aria-label="Tocar ou pausar"><svg class="i"><use href="#i-play"/></svg></button>
+      <label class="speed" title="Velocidade (setas ↑ ↓)"><span>vel.</span>
         <input type="range" id="speed" min="25" max="200" step="5" value="100">
         <b id="speedVal">100%</b>
       </label>
     </div>
     <nav class="tools">
-      <button id="btnSongs" class="tb only-narrow">♫ MÚSICAS</button>
-      <button id="btnRecord" class="tb rec" title="Gravar o que você toca">● GRAVAR</button>
-      <button id="btnKeys" class="tb" title="Trocar o mapa do teclado">⌨ TECLADO</button>
-      <button id="btnAI" class="tb ai" title="Conversar com a sua IA">✦ IA</button>
-      <button id="btnSettings" class="ib" title="Ajustes" aria-label="Ajustes">⚙</button>
-      <button id="btnTheme" class="ib" title="Tema claro/escuro" aria-label="Tema">◑</button>
-      <button id="btnFocus" class="ib" title="Modo foco (esconde os medidores)" aria-label="Modo foco">⊡</button>
-      <button id="btnFull" class="ib" title="Tela cheia" aria-label="Tela cheia">⛶</button>
+      <button id="btnSongs" class="tb only-narrow"><svg class="i"><use href="#i-list-music"/></svg>Músicas</button>
+      <button id="btnRecord" class="tb rec" title="Gravar o que você toca"><svg class="i"><use href="#i-circle-dot"/></svg><span>Gravar</span></button>
+      <button id="btnKeys" class="tb" title="Mapa do teclado"><svg class="i"><use href="#i-keyboard"/></svg>Teclado</button>
+      <button id="btnAI" class="tb" title="Assistente (IA)"><svg class="i"><use href="#i-messages-square"/></svg>Assistente</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="btnSettings" class="ib" title="Ajustes" aria-label="Ajustes"><svg class="i"><use href="#i-sliders-horizontal"/></svg></button>
+      <button id="btnTheme" class="ib" title="Tema claro/escuro" aria-label="Tema"><svg class="i"><use href="#i-sun-moon"/></svg></button>
+      <button id="btnFocus" class="ib" title="Esconder/mostrar os medidores" aria-label="Medidores"><svg class="i"><use href="#i-panel-right-close"/></svg></button>
+      <button id="btnFull" class="ib" title="Tela cheia" aria-label="Tela cheia"><svg class="i"><use href="#i-maximize"/></svg></button>
     </nav>
   </header>
 
   <main class="stage" id="stage">
     <aside class="card sidebar" id="sidebar" aria-label="Músicas">
       <div class="sb-head">
-        <span class="card-title"><i class="dot"></i>MÚSICAS</span>
-        <button class="tb sm" id="sbImport" title="Importar MIDI, partitura de letras…">+ IMPORTAR</button>
+        <span class="card-title">Músicas</span>
+        <button class="tb sm" id="sbImport" title="Importar MIDI ou partitura"><svg class="i"><use href="#i-upload"/></svg>Importar</button>
       </div>
-      <input type="search" id="sbSearch" class="search" placeholder="Buscar música…">
+      <label class="search-wrap"><svg class="i"><use href="#i-search"/></svg><input type="search" id="sbSearch" class="search" placeholder="Buscar"></label>
       <div class="chips" id="sbChips">
         <button data-f="all" class="on">Todas</button>
         <button data-f="facil">Fáceis</button>
@@ -64,28 +95,28 @@
         <button data-f="mine">Minhas</button>
       </div>
       <div class="song-list" id="songList"></div>
-      <button class="ask-ai" id="sbAskAi">✦ Pedir uma música para a IA</button>
+      <button class="ask-ai" id="sbAskAi"><svg class="i"><use href="#i-messages-square"/></svg>Pedir uma música ao assistente</button>
     </aside>
 
     <section class="card p-highway" id="highwayCard">
       <canvas id="cvHighway"></canvas>
       <div class="ready hidden" id="readyCard">
         <div class="ready-card">
-          <div class="rc-kicker" id="rcMode">APRENDER</div>
+          <div class="rc-kicker" id="rcMode">Aprender</div>
           <h2 id="rcTitle">—</h2>
           <div class="rc-sub" id="rcSub"></div>
           <p class="rc-explain" id="rcExplain"></p>
-          <div class="rc-row"><span>MODO</span>
-            <div class="seg" id="rcModes"><button data-mode="watch">OUVIR</button><button data-mode="practice">APRENDER</button><button data-mode="challenge">JOGAR</button></div>
+          <div class="rc-grid">
+            <span>Modo</span>
+            <div class="seg" id="rcModes"><button data-mode="watch">Ouvir</button><button data-mode="practice">Aprender</button><button data-mode="challenge">Jogar</button></div>
+            <span id="rcHandsLabel">Mãos</span>
+            <div class="seg" id="rcHands"><button data-hand="L">Esquerda</button><button data-hand="LR">As duas</button><button data-hand="R">Direita</button></div>
+            <span>Velocidade</span>
+            <span class="stepper"><button id="rcSlower" aria-label="Mais devagar"><svg class="i"><use href="#i-minus"/></svg></button><b id="rcSpeed">100%</b><button id="rcFaster" aria-label="Mais rápido"><svg class="i"><use href="#i-plus"/></svg></button></span>
           </div>
-          <div class="rc-row" id="rcHandsRow"><span>MÃOS</span>
-            <div class="seg" id="rcHands"><button data-hand="L">ESQUERDA</button><button data-hand="LR">AS DUAS</button><button data-hand="R">DIREITA</button></div>
-          </div>
-          <div class="rc-row"><span>VELOCIDADE</span>
-            <span class="stepper"><button id="rcSlower" aria-label="Mais devagar">−</button><b id="rcSpeed">100%</b><button id="rcFaster" aria-label="Mais rápido">+</button></span>
-          </div>
-          <button class="start" id="rcStart">▶ COMEÇAR</button>
-          <small class="muted">ou aperte <kbd>ENTER</kbd></small>
+          <div id="rcHandsRow" hidden></div>
+          <button class="start" id="rcStart"><svg class="i"><use href="#i-play"/></svg>Começar</button>
+          <small class="muted">ou aperte <kbd>Enter</kbd></small>
         </div>
       </div>
     </section>
@@ -105,11 +136,11 @@
 
   <section class="card keys" id="keysArea">
     <div class="keys-head">
-      <span class="card-title"><i class="dot"></i><span id="presetName">SEU TECLADO</span></span>
+      <span class="card-title">Teclado do computador <small id="presetName"></small></span>
       <span class="keys-hint" id="keysHint"></span>
       <span class="keys-actions">
-        <button class="tb sm" id="kbChange">TROCAR MAPA</button>
-        <button class="tb sm" id="kbToggle" title="Mostrar/ocultar o teclado">▾ OCULTAR</button>
+        <button class="tb sm" id="kbChange"><svg class="i"><use href="#i-keyboard"/></svg>Trocar mapa</button>
+        <button class="tb sm" id="kbToggle" title="Mostrar/ocultar o teclado">Ocultar</button>
       </span>
     </div>
     <div class="kb" id="kb"></div>
@@ -118,80 +149,79 @@
   <footer class="status">
     <div class="progress" id="progress" title="Clique para pular"><canvas id="cvProgress"></canvas></div>
     <span id="timeText" class="time">0:00</span>
-    <span id="sustainInd" class="ind">PEDAL</span>
-    <span id="octInd" class="ind">OITAVA 0</span>
-    <span id="metroInd" class="ind click" title="Metrônomo (tecla ao lado do 1)">METRÔNOMO</span>
-    <span id="recInd" class="ind rec hidden">● REC 0:00</span>
-    <span id="midiInd" class="ind hidden">MIDI</span>
-    <span id="sampleInd" class="ind">PIANO —</span>
+    <span id="sustainInd" class="ind">pedal</span>
+    <span id="octInd" class="ind">oitava 0</span>
+    <span id="metroInd" class="ind click" title="Metrônomo (tecla à esquerda do 1)"><svg class="i"><use href="#i-metronome"/></svg>metrônomo</span>
+    <span id="recInd" class="ind rec hidden">● rec 0:00</span>
+    <span id="midiInd" class="ind hidden">midi</span>
+    <span id="sampleInd" class="ind">piano —</span>
   </footer>
 </div>
 
-<!-- Assistente de IA -->
-<aside id="chat" class="drawer" aria-label="Assistente de IA">
+<!-- Assistente -->
+<aside id="chat" class="drawer" aria-label="Assistente">
   <div class="drawer-head">
     <div>
-      <div class="drawer-title">✦ ASSISTENTE</div>
+      <div class="drawer-title">Assistente</div>
       <div class="drawer-sub" id="aiLabel">—</div>
     </div>
     <div class="drawer-actions">
-      <button class="ib" id="aiConfig" title="Configurar IA">⚙</button>
-      <button class="ib" id="aiClear" title="Nova conversa">⟲</button>
-      <button class="ib" id="aiClose" title="Fechar">✕</button>
+      <button class="ib" id="aiConfig" title="Configurar"><svg class="i"><use href="#i-sliders-horizontal"/></svg></button>
+      <button class="ib" id="aiClear" title="Nova conversa"><svg class="i"><use href="#i-rotate-ccw"/></svg></button>
+      <button class="ib" id="aiClose" title="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
   </div>
   <div class="chat-log" id="chatLog"></div>
   <div class="chat-suggest" id="chatSuggest">
-    <button>Me ensina uma música fácil</button>
+    <button>Qual música é boa pra começar?</button>
     <button>Como eu fui na última?</button>
-    <button>Cria um exercício para a mão esquerda</button>
-    <button>Baixa Für Elise em MIDI</button>
+    <button>Cria um exercício pra mão esquerda</button>
   </div>
   <form class="chat-input" id="chatForm">
-    <button type="button" class="ib mic" id="aiMic" title="Falar (Tab)">🎙</button>
-    <textarea id="chatText" rows="1" placeholder="Fale com sua IA…"></textarea>
-    <button type="submit" class="ib send" id="aiSend" title="Enviar">➤</button>
+    <button type="button" class="ib mic" id="aiMic" title="Falar (Tab)"><svg class="i"><use href="#i-mic"/></svg></button>
+    <textarea id="chatText" rows="1" placeholder="Escreva aqui…"></textarea>
+    <button type="submit" class="ib send" id="aiSend" title="Enviar"><svg class="i"><use href="#i-arrow-up"/></svg></button>
   </form>
-  <label class="chat-speak"><input type="checkbox" id="aiSpeak"> ler respostas em voz alta</label>
+  <label class="chat-speak"><input type="checkbox" id="aiSpeak"> ler as respostas em voz alta</label>
 </aside>
 
 <!-- Biblioteca -->
-<div class="modal" id="mLibrary" role="dialog" aria-modal="true" aria-label="Músicas">
+<div class="modal" id="mLibrary" role="dialog" aria-modal="true" aria-label="Biblioteca">
   <div class="sheet wide">
     <div class="sheet-head">
-      <h2>♫ MÚSICAS</h2>
+      <h2>Biblioteca</h2>
       <div class="tabs" id="libTabs">
-        <button data-tab="all" class="on">TODAS</button>
-        <button data-tab="builtin">INCLUÍDAS</button>
-        <button data-tab="mine">MINHAS</button>
-        <button data-tab="import">+ IMPORTAR</button>
+        <button data-tab="all" class="on">Todas</button>
+        <button data-tab="builtin">Incluídas</button>
+        <button data-tab="mine">Minhas</button>
+        <button data-tab="import">Importar</button>
       </div>
-      <input type="search" id="libSearch" placeholder="buscar…">
-      <button class="ib close" data-close>✕</button>
+      <input type="search" id="libSearch" placeholder="Buscar">
+      <button class="ib close" data-close aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
     <div class="sheet-body">
       <div id="libList" class="lib-list"></div>
       <div id="libImport" class="lib-import hidden">
         <div class="drop" id="dropZone">
-          <div class="drop-icon">⬇</div>
-          <div><b>Arraste arquivos MIDI (.mid) aqui</b> ou <label class="link">escolha no computador<input type="file" id="fileInput" accept=".mid,.midi,.kar,.rmi,audio/midi" multiple hidden></label></div>
-          <small>Dica: você pode arrastar um .mid em qualquer lugar da tela.</small>
+          <svg class="i drop-icon"><use href="#i-file-music"/></svg>
+          <div><b>Arraste arquivos MIDI (.mid) para cá</b> ou <label class="link">escolha no computador<input type="file" id="fileInput" accept=".mid,.midi,.kar,.rmi,audio/midi" multiple hidden></label></div>
+          <small>Também dá para soltar o arquivo em qualquer lugar da tela.</small>
         </div>
         <div class="imp-grid">
           <div class="imp-card">
             <h3>Partitura de letras <small>(Virtual Piano / Roblox)</small></h3>
-            <textarea id="vpText" rows="5" placeholder="Ex.: [tu] y t r e | [qe] w q 0 …"></textarea>
-            <div class="row"><input id="vpTitle" placeholder="Título"><input id="vpBpm" type="number" value="100" min="30" max="240" title="BPM"><button class="tb" id="vpAdd">ADICIONAR</button></div>
-            <small>Letras grudadas tocam rápido, espaço = pausa curta, "|" = pausa longa, [abc] = acorde. Maiúscula = sustenido.</small>
+            <textarea id="vpText" rows="5" placeholder="[tu] y t r e | [qe] w q 0"></textarea>
+            <div class="row"><input id="vpTitle" placeholder="Título"><input id="vpBpm" type="number" value="100" min="30" max="240" title="BPM"><button class="tb" id="vpAdd">Adicionar</button></div>
+            <small>Letras juntas tocam rápido, espaço é uma pausa curta, "|" é uma pausa longa e [abc] é um acorde. Maiúscula vira sustenido.</small>
           </div>
           <div class="imp-card">
-            <h3>Baixar MIDI de um link</h3>
-            <div class="row"><input id="urlInput" placeholder="https://…/musica.mid"><button class="tb" id="urlAdd">BAIXAR</button></div>
-            <small>Alguns sites bloqueiam o download pelo navegador (CORS). Se falhar, baixe o arquivo e arraste aqui — ou peça para a IA escrever a música.</small>
-            <h3 style="margin-top:14px">Notação Pianeon <small>(avançado)</small></h3>
+            <h3>MIDI a partir de um link</h3>
+            <div class="row"><input id="urlInput" placeholder="https://…/musica.mid"><button class="tb" id="urlAdd">Baixar</button></div>
+            <small>Alguns sites não deixam o navegador baixar direto. Se não funcionar, baixe o arquivo e arraste para cá.</small>
+            <h3 style="margin-top:14px">Escrever as notas <small>(avançado)</small></h3>
             <textarea id="ntRight" rows="2" placeholder="Mão direita: E4:1 E4 F4 G4 | G4 F4 E4 D4"></textarea>
             <textarea id="ntLeft" rows="2" placeholder="Mão esquerda: C3:4 | G2:4"></textarea>
-            <div class="row"><input id="ntTitle" placeholder="Título"><input id="ntBpm" type="number" value="100" min="30" max="240" title="BPM"><button class="tb" id="ntAdd">ADICIONAR</button></div>
+            <div class="row"><input id="ntTitle" placeholder="Título"><input id="ntBpm" type="number" value="100" min="30" max="240" title="BPM"><button class="tb" id="ntAdd">Adicionar</button></div>
           </div>
         </div>
       </div>
@@ -199,31 +229,31 @@
   </div>
 </div>
 
-<!-- Editor de teclado -->
-<div class="modal" id="mKeys" role="dialog" aria-modal="true" aria-label="Teclado">
+<!-- Mapa do teclado -->
+<div class="modal" id="mKeys" role="dialog" aria-modal="true" aria-label="Mapa do teclado">
   <div class="sheet wide">
     <div class="sheet-head">
-      <h2>⌨ SEU TECLADO</h2>
-      <button class="ib close" data-close>✕</button>
+      <h2>Mapa do teclado</h2>
+      <button class="ib close" data-close aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
     <div class="sheet-body">
-      <p class="lead">Cada pessoa tem um teclado diferente. Escolha um estilo de mapa, o formato do seu teclado e, se quiser, troque qualquer tecla.</p>
+      <p class="lead">Escolha como as teclas viram notas e o formato do seu teclado. Também dá para trocar qualquer tecla.</p>
       <div class="preset-grid" id="presetGrid"></div>
       <div class="kb-opts">
-        <label>FORMATO <select id="kbLayout"></select></label>
-        <label>OITAVA <span class="stepper"><button id="octMinus">−</button><b id="octVal">0</b><button id="octPlus">+</button></span></label>
-        <label>FORÇA DA NOTA <input type="range" id="kbVel" min="20" max="100"><span id="kbVelVal"></span></label>
+        <label>Formato <select id="kbLayout"></select></label>
+        <label>Oitava <span class="stepper"><button id="octMinus" aria-label="Oitava abaixo"><svg class="i"><use href="#i-minus"/></svg></button><b id="octVal">0</b><button id="octPlus" aria-label="Oitava acima"><svg class="i"><use href="#i-plus"/></svg></button></span></label>
+        <label>Força da nota <input type="range" id="kbVel" min="20" max="100"><span id="kbVelVal"></span></label>
         <label class="chk"><input type="checkbox" id="kbNumpad"> teclado numérico toca graves</label>
       </div>
-      <h3>PRÉVIA <small>— clique numa tecla para ouvir</small></h3>
+      <h3>Prévia <small>clique numa tecla para ouvir</small></h3>
       <div class="kb preview" id="keycapsPreview"></div>
-      <h3>TROCAR TECLAS <small>— clique numa nota do piano e depois aperte a tecla do computador (Delete remove, Esc cancela)</small></h3>
+      <h3>Trocar teclas <small>clique numa nota do piano e aperte a tecla que quiser (Delete tira, Esc cancela)</small></h3>
       <div class="piano-strip" id="pianoStrip"></div>
       <div class="row end">
         <span id="assignStatus" class="muted"></span>
-        <button class="tb" id="kbExport">EXPORTAR</button>
-        <label class="tb">IMPORTAR<input type="file" id="kbImport" accept=".json,application/json" hidden></label>
-        <button class="tb" id="kbReset">RESTAURAR PADRÃO</button>
+        <button class="tb" id="kbExport"><svg class="i"><use href="#i-download"/></svg>Exportar</button>
+        <label class="tb"><svg class="i"><use href="#i-upload"/></svg>Importar<input type="file" id="kbImport" accept=".json,application/json" hidden></label>
+        <button class="tb" id="kbReset">Voltar ao padrão</button>
       </div>
     </div>
   </div>
@@ -233,45 +263,45 @@
 <div class="modal" id="mSettings" role="dialog" aria-modal="true" aria-label="Ajustes">
   <div class="sheet">
     <div class="sheet-head">
-      <h2>⚙ AJUSTES</h2>
+      <h2>Ajustes</h2>
       <div class="tabs" id="setTabs">
-        <button data-tab="sound" class="on">SOM</button>
-        <button data-tab="view">VISUAL & JOGO</button>
-        <button data-tab="ai">IA</button>
+        <button data-tab="sound" class="on">Som</button>
+        <button data-tab="view">Tela e jogo</button>
+        <button data-tab="ai">Assistente</button>
       </div>
-      <button class="ib close" data-close>✕</button>
+      <button class="ib close" data-close aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
     <div class="sheet-body">
       <div class="set-pane" data-pane="sound">
-        <label class="field">INSTRUMENTO <select id="setInstrument"></select></label>
-        <label class="field">VOLUME <input type="range" id="setVolume" min="0" max="100"></label>
-        <label class="field">REVERB (SALA) <input type="range" id="setReverb" min="0" max="100"></label>
+        <label class="field">Instrumento <select id="setInstrument"></select></label>
+        <label class="field">Volume <input type="range" id="setVolume" min="0" max="100"></label>
+        <label class="field">Reverb (sala) <input type="range" id="setReverb" min="0" max="100"></label>
         <label class="field chk"><input type="checkbox" id="setMetro"> metrônomo</label>
-        <label class="field">BPM NO MODO LIVRE <input type="number" id="setFreeBpm" min="30" max="240"></label>
-        <div class="field"><span>TECLADO MIDI (USB/BLUETOOTH)</span><span id="midiStatus" class="muted">—</span><button class="tb" id="midiConnect">CONECTAR</button></div>
-        <p class="muted small">Piano de cauda: samples do Salamander Grand Piano (CC-BY 3.0, Alexander Holm). Sem internet, o app usa o piano sintetizado.</p>
+        <label class="field">BPM no modo livre <input type="number" id="setFreeBpm" min="30" max="240"></label>
+        <div class="field"><span>Teclado MIDI (USB/Bluetooth)</span><span id="midiStatus" class="muted">—</span><button class="tb" id="midiConnect">Conectar</button></div>
+        <p class="muted small">Piano de cauda: samples do Salamander Grand Piano (CC-BY 3.0, Alexander Holm). Sem internet, entra um piano sintetizado.</p>
       </div>
       <div class="set-pane hidden" data-pane="view">
-        <label class="field">TEMA <select id="setTheme"><option value="light">Claro (estúdio)</option><option value="dark">Escuro (noite)</option></select></label>
-        <label class="field">NOMES DAS NOTAS <select id="setNames"><option value="letters">C D E F G A B</option><option value="solfege">Dó Ré Mi Fá Sol Lá Si</option></select></label>
-        <label class="field">DISTÂNCIA DAS NOTAS NA PISTA <input type="range" id="setLookahead" min="12" max="45"></label>
+        <label class="field">Tema <select id="setTheme"><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
+        <label class="field">Nome das notas <select id="setNames"><option value="letters">C D E F G A B</option><option value="solfege">Dó Ré Mi Fá Sol Lá Si</option></select></label>
+        <label class="field">Distância das notas na pista <input type="range" id="setLookahead" min="12" max="45"></label>
         <label class="field chk"><input type="checkbox" id="setKeyOnNotes"> mostrar a tecla dentro das notas</label>
-        <label class="field chk"><input type="checkbox" id="setFold"> ajustar notas ao alcance do meu teclado (troca de oitava)</label>
-        <label class="field">PREPARAÇÃO ANTES DE COMEÇAR (s) <input type="number" id="setLeadIn" min="1" max="8" step="0.5"></label>
-        <label class="field chk"><input type="checkbox" id="setFocus"> modo foco (só pista + teclado)</label>
-        <button class="tb" id="resetScores">APAGAR RECORDES</button>
+        <label class="field chk"><input type="checkbox" id="setFold"> trazer notas fora do alcance para uma oitava que eu consiga tocar</label>
+        <label class="field">Contagem antes de começar (s) <input type="number" id="setLeadIn" min="1" max="8" step="0.5"></label>
+        <label class="field chk"><input type="checkbox" id="setFocus"> esconder os medidores</label>
+        <button class="tb" id="resetScores"><svg class="i"><use href="#i-trash-2"/></svg>Apagar recordes</button>
       </div>
       <div class="set-pane hidden" data-pane="ai">
-        <p class="muted small">Use a sua própria IA. A chave fica salva só neste navegador e é enviada apenas para o provedor escolhido. Não use este recurso num computador compartilhado.</p>
-        <label class="field">PROVEDOR <select id="aiProvider"></select></label>
-        <label class="field">CHAVE DA API <input type="password" id="aiKey" autocomplete="off" placeholder="cole sua chave aqui"></label>
-        <label class="field">MODELO <input id="aiModel" list="aiModels" placeholder="nome do modelo"><datalist id="aiModels"></datalist></label>
-        <label class="field" id="aiBaseRow">URL BASE <input id="aiBase" placeholder="https://…/v1"></label>
+        <p class="muted small">Use a IA que você preferir. A chave fica salva só neste navegador e vai direto para o provedor escolhido. Evite salvar chaves em computador compartilhado.</p>
+        <label class="field">Provedor <select id="aiProvider"></select></label>
+        <label class="field">Chave da API <input type="password" id="aiKey" autocomplete="off" placeholder="cole a chave aqui"></label>
+        <label class="field">Modelo <input id="aiModel" list="aiModels" placeholder="nome do modelo"><datalist id="aiModels"></datalist></label>
+        <label class="field" id="aiBaseRow">URL base <input id="aiBase" placeholder="https://…/v1"></label>
         <p class="muted small" id="aiHelp"></p>
-        <label class="field">NOME DO ASSISTENTE <input id="aiName" maxlength="24"></label>
-        <label class="field" id="aiEffortRow">CAPRICHO DAS RESPOSTAS <select id="aiEffort"><option value="low">Rápido</option><option value="medium">Equilibrado</option><option value="high">Caprichado</option></select></label>
-        <label class="field chk" id="aiWebRow"><input type="checkbox" id="aiWeb"> permitir busca na web (para achar MIDIs; tem custo extra)</label>
-        <div class="row end"><span id="aiTestStatus" class="muted"></span><button class="tb" id="aiTest">TESTAR</button></div>
+        <label class="field">Nome do assistente <input id="aiName" maxlength="24"></label>
+        <label class="field" id="aiEffortRow">Respostas <select id="aiEffort"><option value="low">Rápidas</option><option value="medium">Equilibradas</option><option value="high">Mais caprichadas</option></select></label>
+        <label class="field chk" id="aiWebRow"><input type="checkbox" id="aiWeb"> deixar buscar na web (ajuda a achar MIDIs, mas custa mais)</label>
+        <div class="row end"><span id="aiTestStatus" class="muted"></span><button class="tb" id="aiTest">Testar conexão</button></div>
       </div>
     </div>
   </div>
@@ -280,29 +310,28 @@
 <!-- Resultado -->
 <div class="modal" id="mResults" role="dialog" aria-modal="true" aria-label="Resultado">
   <div class="sheet narrow">
-    <div class="sheet-head"><h2 id="resTitle">RESULTADO</h2><button class="ib close" data-close>✕</button></div>
+    <div class="sheet-head"><h2 id="resTitle">Resultado</h2><button class="ib close" data-close aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="sheet-body" id="resBody"></div>
   </div>
 </div>
 
-<!-- Boas-vindas -->
+<!-- Início -->
 <div id="splash" class="splash">
   <div class="splash-card">
-    <div class="splash-logo"><i></i><i></i><i></i></div>
-    <h1>PIANEON</h1>
-    <p class="tag">Toque piano com o teclado do computador. <b>Todas as teclas tocam</b>: cada fileira é uma oitava, a tecla <kbd>Q</kbd> é o Dó central.</p>
+    <div class="wordmark"><span class="mark" aria-hidden="true"></span>pianeon</div>
+    <p class="tag">Piano no teclado do computador. Cada fileira é uma oitava e o <kbd>Q</kbd> é o Dó central.</p>
     <div class="choices">
-      <button class="choice" data-go="free"><b>🎹</b><span>Tocar livre</span><small>experimente o teclado</small></button>
-      <button class="choice primary" data-go="learn"><b>🎓</b><span>Aprender uma música</span><small>começa com "Brilha, Brilha"</small></button>
-      <button class="choice" data-go="ai"><b>✦</b><span>Conversar com a IA</span><small>use a sua própria IA</small></button>
+      <button class="choice primary" data-go="learn">Aprender uma música<small>começa com Brilha, Brilha Estrelinha</small></button>
+      <button class="choice" data-go="free">Tocar livre<small>ou aperte qualquer tecla</small></button>
+      <button class="choice" data-go="ai">Abrir o assistente<small>com a sua própria IA</small></button>
     </div>
-    <small class="muted">Funciona com teclado ABNT2, notebook, 60%… e você pode trocar o mapa em ⌨ TECLADO.</small>
   </div>
 </div>
 
 <div id="toasts" class="toasts" aria-live="polite"></div>
-<div id="dragOverlay" class="drag-overlay hidden">SOLTE O ARQUIVO MIDI ♫</div>
+<div id="dragOverlay" class="drag-overlay hidden">Solte o arquivo MIDI</div>
 
+<script src="vendor/midi/Midi.js"></script>
 <script src="js/util.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/midi.js"></script>
