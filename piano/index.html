@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pianeon — Piano no Teclado</title>
+<meta name="description" content="Toque piano com o teclado do computador, aprenda músicas como num jogo, importe MIDI e converse com sua própria IA.">
+<meta name="theme-color" content="#e6e8ec">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2315181e'/%3E%3Crect x='12' y='14' width='9' height='36' rx='2' fill='%231aa6b7'/%3E%3Crect x='27' y='14' width='9' height='36' rx='2' fill='%232f6be4'/%3E%3Crect x='42' y='14' width='9' height='36' rx='2' fill='%236a4bd6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand" title="Pianeon">
+      <span class="logo"><i></i><i></i><i></i></span>
+      <span class="brand-name">PIANEON</span>
+    </div>
+    <div class="legend">
+      <span><i class="sw r"></i>M. DIREITA</span>
+      <span><i class="sw l"></i>M. ESQUERDA</span>
+      <span><i class="sw y"></i>VOCÊ</span>
+    </div>
+    <div class="songbox">
+      <div id="songTitle" class="song-title">MODO LIVRE</div>
+      <div id="songMeta" class="song-meta">toque com o teclado do computador</div>
+    </div>
+    <div class="transport">
+      <button id="btnRestart" class="ib" title="Recomeçar (Backspace)" aria-label="Recomeçar">⟲</button>
+      <button id="btnPlay" class="ib play" title="Tocar / pausar (Enter)" aria-label="Tocar ou pausar">▶</button>
+      <div class="seg" id="modeSeg" role="group" aria-label="Modo">
+        <button data-mode="watch" title="A música toca sozinha">ASSISTIR</button>
+        <button data-mode="practice" title="Espera você acertar cada nota">PRATICAR</button>
+        <button data-mode="challenge" title="Tempo real com pontos e combo">DESAFIO</button>
+      </div>
+      <div class="seg small" id="handSeg" role="group" aria-label="Mãos">
+        <button data-hand="L" title="Tocar só a mão esquerda">ESQ</button>
+        <button data-hand="LR" title="Tocar as duas mãos">AMBAS</button>
+        <button data-hand="R" title="Tocar só a mão direita">DIR</button>
+      </div>
+      <label class="speed" title="Velocidade (setas ↑ ↓)">VEL
+        <input type="range" id="speed" min="25" max="200" step="5" value="100">
+        <span id="speedVal">100%</span>
+      </label>
+    </div>
+    <nav class="actions">
+      <button id="btnLibrary" class="tb">♫ MÚSICAS</button>
+      <button id="btnRecord" class="tb rec" title="Gravar o que você toca">● GRAVAR</button>
+      <button id="btnKeys" class="tb">⌨ TECLADO</button>
+      <button id="btnAI" class="tb ai">✦ IA</button>
+      <button id="btnSettings" class="ib" title="Ajustes" aria-label="Ajustes">⚙</button>
+      <button id="btnTheme" class="ib" title="Tema claro/escuro" aria-label="Tema">◑</button>
+      <button id="btnFocus" class="ib" title="Modo foco (esconde os medidores)" aria-label="Modo foco">⊡</button>
+      <button id="btnFull" class="ib" title="Tela cheia" aria-label="Tela cheia">⛶</button>
+    </nav>
+  </header>
+
+  <main class="stage" id="stage">
+    <section class="panel p-highway"><canvas id="cvHighway"></canvas></section>
+    <div class="instr">
+      <section class="panel p-dial"><canvas id="cvDial"></canvas></section>
+      <section class="panel p-roll"><canvas id="cvRoll"></canvas></section>
+      <section class="panel p-wave"><canvas id="cvWave"></canvas></section>
+      <section class="panel p-scope"><canvas id="cvScope"></canvas></section>
+      <section class="panel p-spec"><canvas id="cvSpec"></canvas></section>
+      <section class="panel p-vector"><canvas id="cvVector"></canvas></section>
+      <section class="panel p-map win">
+        <div class="winbar"><i></i><i></i><i></i><span>MAPA DA MÚSICA</span></div>
+        <canvas id="cvMap" title="Clique para pular para um trecho"></canvas>
+      </section>
+      <section class="panel p-gram dark"><canvas id="cvGram"></canvas></section>
+    </div>
+  </main>
+
+  <section class="keys" id="keysArea">
+    <div class="keys-head">
+      <span id="presetName">TECLADO: PROFISSIONAL</span>
+      <span class="keys-tips">← → OITAVA · ESPAÇO = PEDAL · ENTER = TOCAR/PAUSAR · TAB = FALAR COM A IA</span>
+    </div>
+    <div class="keycaps" id="keycaps"></div>
+  </section>
+
+  <footer class="status">
+    <div class="progress" id="progress" title="Clique para pular"><div class="bar" id="progressBar"></div></div>
+    <span id="timeText" class="time">0:00 / 0:00</span>
+    <span id="sustainInd" class="ind">SUSTAIN</span>
+    <span id="octInd" class="ind">OITAVA 0</span>
+    <span id="metroInd" class="ind click" title="Metrônomo">METRÔNOMO</span>
+    <span id="recInd" class="ind rec hidden">● REC 0:00</span>
+    <span id="midiInd" class="ind hidden">MIDI</span>
+    <span id="sampleInd" class="ind">PIANO —</span>
+  </footer>
+</div>
+
+<!-- Assistente de IA -->
+<aside id="chat" class="drawer" aria-label="Assistente de IA">
+  <div class="drawer-head">
+    <div>
+      <div class="drawer-title">✦ ASSISTENTE</div>
+      <div class="drawer-sub" id="aiLabel">—</div>
+    </div>
+    <div class="drawer-actions">
+      <button class="ib" id="aiConfig" title="Configurar IA">⚙</button>
+      <button class="ib" id="aiClear" title="Nova conversa">⟲</button>
+      <button class="ib" id="aiClose" title="Fechar">✕</button>
+    </div>
+  </div>
+  <div class="chat-log" id="chatLog"></div>
+  <div class="chat-suggest" id="chatSuggest">
+    <button>Me ensina uma música fácil</button>
+    <button>Como eu fui na última?</button>
+    <button>Cria um exercício para a mão esquerda</button>
+    <button>Baixa Für Elise em MIDI</button>
+  </div>
+  <form class="chat-input" id="chatForm">
+    <button type="button" class="ib mic" id="aiMic" title="Falar (Tab)">🎙</button>
+    <textarea id="chatText" rows="1" placeholder="Fale com sua IA…"></textarea>
+    <button type="submit" class="ib send" id="aiSend" title="Enviar">➤</button>
+  </form>
+  <label class="chat-speak"><input type="checkbox" id="aiSpeak"> ler respostas em voz alta</label>
+</aside>
+
+<!-- Biblioteca -->
+<div class="modal" id="mLibrary" role="dialog" aria-modal="true" aria-label="Músicas">
+  <div class="sheet wide">
+    <div class="sheet-head">
+      <h2>♫ MÚSICAS</h2>
+      <div class="tabs" id="libTabs">
+        <button data-tab="all" class="on">TODAS</button>
+        <button data-tab="builtin">INCLUÍDAS</button>
+        <button data-tab="mine">MINHAS</button>
+        <button data-tab="import">+ IMPORTAR</button>
+      </div>
+      <input type="search" id="libSearch" placeholder="buscar…">
+      <button class="ib close" data-close>✕</button>
+    </div>
+    <div class="sheet-body">
+      <div id="libList" class="lib-list"></div>
+      <div id="libImport" class="lib-import hidden">
+        <div class="drop" id="dropZone">
+          <div class="drop-icon">⬇</div>
+          <div><b>Arraste arquivos MIDI (.mid) aqui</b> ou <label class="link">escolha no computador<input type="file" id="fileInput" accept=".mid,.midi,.kar,.rmi,audio/midi" multiple hidden></label></div>
+          <small>Dica: você pode arrastar um .mid em qualquer lugar da tela.</small>
+        </div>
+        <div class="imp-grid">
+          <div class="imp-card">
+            <h3>Partitura de letras <small>(Virtual Piano / Roblox)</small></h3>
+            <textarea id="vpText" rows="5" placeholder="Ex.: [tu] y t r e | [qe] w q 0 …"></textarea>
+            <div class="row"><input id="vpTitle" placeholder="Título"><input id="vpBpm" type="number" value="100" min="30" max="240" title="BPM"><button class="tb" id="vpAdd">ADICIONAR</button></div>
+            <small>Letras grudadas tocam rápido, espaço = pausa curta, "|" = pausa longa, [abc] = acorde. Maiúscula = sustenido.</small>
+          </div>
+          <div class="imp-card">
+            <h3>Baixar MIDI de um link</h3>
+            <div class="row"><input id="urlInput" placeholder="https://…/musica.mid"><button class="tb" id="urlAdd">BAIXAR</button></div>
+            <small>Alguns sites bloqueiam o download pelo navegador (CORS). Se falhar, baixe o arquivo e arraste aqui — ou peça para a IA escrever a música.</small>
+            <h3 style="margin-top:14px">Notação Pianeon <small>(avançado)</small></h3>
+            <textarea id="ntRight" rows="2" placeholder="Mão direita: E4:1 E4 F4 G4 | G4 F4 E4 D4"></textarea>
+            <textarea id="ntLeft" rows="2" placeholder="Mão esquerda: C3:4 | G2:4"></textarea>
+            <div class="row"><input id="ntTitle" placeholder="Título"><input id="ntBpm" type="number" value="100" min="30" max="240" title="BPM"><button class="tb" id="ntAdd">ADICIONAR</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Editor de teclado -->
+<div class="modal" id="mKeys" role="dialog" aria-modal="true" aria-label="Teclado">
+  <div class="sheet wide">
+    <div class="sheet-head">
+      <h2>⌨ SEU TECLADO</h2>
+      <button class="ib close" data-close>✕</button>
+    </div>
+    <div class="sheet-body">
+      <p class="lead">Cada pessoa tem um teclado diferente. Escolha um estilo de mapa, o formato do seu teclado e, se quiser, troque qualquer tecla.</p>
+      <div class="preset-grid" id="presetGrid"></div>
+      <div class="kb-opts">
+        <label>FORMATO <select id="kbLayout"></select></label>
+        <label>OITAVA <span class="stepper"><button id="octMinus">−</button><b id="octVal">0</b><button id="octPlus">+</button></span></label>
+        <label>FORÇA DA NOTA <input type="range" id="kbVel" min="20" max="100"><span id="kbVelVal"></span></label>
+        <label class="chk"><input type="checkbox" id="kbNumpad"> teclado numérico toca graves</label>
+      </div>
+      <h3>PRÉVIA <small>— clique numa tecla para ouvir</small></h3>
+      <div class="keycaps preview" id="keycapsPreview"></div>
+      <h3>TROCAR TECLAS <small>— clique numa nota do piano e depois aperte a tecla do computador (Delete remove, Esc cancela)</small></h3>
+      <div class="piano-strip" id="pianoStrip"></div>
+      <div class="row end">
+        <span id="assignStatus" class="muted"></span>
+        <button class="tb" id="kbExport">EXPORTAR</button>
+        <label class="tb">IMPORTAR<input type="file" id="kbImport" accept=".json,application/json" hidden></label>
+        <button class="tb" id="kbReset">RESTAURAR PADRÃO</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ajustes -->
+<div class="modal" id="mSettings" role="dialog" aria-modal="true" aria-label="Ajustes">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>⚙ AJUSTES</h2>
+      <div class="tabs" id="setTabs">
+        <button data-tab="sound" class="on">SOM</button>
+        <button data-tab="view">VISUAL & JOGO</button>
+        <button data-tab="ai">IA</button>
+      </div>
+      <button class="ib close" data-close>✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="set-pane" data-pane="sound">
+        <label class="field">INSTRUMENTO <select id="setInstrument"></select></label>
+        <label class="field">VOLUME <input type="range" id="setVolume" min="0" max="100"></label>
+        <label class="field">REVERB (SALA) <input type="range" id="setReverb" min="0" max="100"></label>
+        <label class="field chk"><input type="checkbox" id="setMetro"> metrônomo</label>
+        <label class="field">BPM NO MODO LIVRE <input type="number" id="setFreeBpm" min="30" max="240"></label>
+        <div class="field"><span>TECLADO MIDI (USB/BLUETOOTH)</span><span id="midiStatus" class="muted">—</span><button class="tb" id="midiConnect">CONECTAR</button></div>
+        <p class="muted small">Piano de cauda: samples do Salamander Grand Piano (CC-BY 3.0, Alexander Holm). Sem internet, o app usa o piano sintetizado.</p>
+      </div>
+      <div class="set-pane hidden" data-pane="view">
+        <label class="field">TEMA <select id="setTheme"><option value="light">Claro (estúdio)</option><option value="dark">Escuro (noite)</option></select></label>
+        <label class="field">NOMES DAS NOTAS <select id="setNames"><option value="letters">C D E F G A B</option><option value="solfege">Dó Ré Mi Fá Sol Lá Si</option></select></label>
+        <label class="field">DISTÂNCIA DAS NOTAS NA PISTA <input type="range" id="setLookahead" min="12" max="45"></label>
+        <label class="field chk"><input type="checkbox" id="setKeyOnNotes"> mostrar a tecla dentro das notas</label>
+        <label class="field chk"><input type="checkbox" id="setFold"> ajustar notas ao alcance do meu teclado (troca de oitava)</label>
+        <label class="field">PREPARAÇÃO ANTES DE COMEÇAR (s) <input type="number" id="setLeadIn" min="1" max="8" step="0.5"></label>
+        <label class="field chk"><input type="checkbox" id="setFocus"> modo foco (só pista + teclado)</label>
+        <button class="tb" id="resetScores">APAGAR RECORDES</button>
+      </div>
+      <div class="set-pane hidden" data-pane="ai">
+        <p class="muted small">Use a sua própria IA. A chave fica salva só neste navegador e é enviada apenas para o provedor escolhido. Não use este recurso num computador compartilhado.</p>
+        <label class="field">PROVEDOR <select id="aiProvider"></select></label>
+        <label class="field">CHAVE DA API <input type="password" id="aiKey" autocomplete="off" placeholder="cole sua chave aqui"></label>
+        <label class="field">MODELO <input id="aiModel" list="aiModels" placeholder="nome do modelo"><datalist id="aiModels"></datalist></label>
+        <label class="field" id="aiBaseRow">URL BASE <input id="aiBase" placeholder="https://…/v1"></label>
+        <p class="muted small" id="aiHelp"></p>
+        <label class="field">NOME DO ASSISTENTE <input id="aiName" maxlength="24"></label>
+        <label class="field" id="aiEffortRow">CAPRICHO DAS RESPOSTAS <select id="aiEffort"><option value="low">Rápido</option><option value="medium">Equilibrado</option><option value="high">Caprichado</option></select></label>
+        <label class="field chk" id="aiWebRow"><input type="checkbox" id="aiWeb"> permitir busca na web (para achar MIDIs; tem custo extra)</label>
+        <div class="row end"><span id="aiTestStatus" class="muted"></span><button class="tb" id="aiTest">TESTAR</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Resultado -->
+<div class="modal" id="mResults" role="dialog" aria-modal="true" aria-label="Resultado">
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2 id="resTitle">RESULTADO</h2><button class="ib close" data-close>✕</button></div>
+    <div class="sheet-body" id="resBody"></div>
+  </div>
+</div>
+
+<!-- Boas-vindas -->
+<div id="splash" class="splash">
+  <div class="splash-card">
+    <div class="splash-logo"><i></i><i></i><i></i></div>
+    <h1>PIANEON</h1>
+    <p class="tag">Toque piano com o teclado do computador. Aprenda músicas como num jogo. Converse com a sua IA enquanto toca.</p>
+    <ul class="feat">
+      <li><b>⌨</b> Funciona com qualquer teclado (ABNT2, notebook, 60%…) — e você pode remapear tudo</li>
+      <li><b>♫</b> Importe MIDI, partituras de letras ou peça músicas para a IA</li>
+      <li><b>◎</b> Modos assistir, praticar (espera você) e desafio (pontos e combo)</li>
+    </ul>
+    <button id="startBtn" class="start">COMEÇAR ▸</button>
+    <small class="muted">Dica: aperte as teclas Z X C V B N M para tocar.</small>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="dragOverlay" class="drag-overlay hidden">SOLTE O ARQUIVO MIDI ♫</div>
+
+<script src="js/util.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/midi.js"></script>
+<script src="js/songs.js"></script>
+<script src="js/keymap.js"></script>
+<script src="js/game.js"></script>
+<script src="js/visuals.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
