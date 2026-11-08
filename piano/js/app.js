@@ -16,6 +16,7 @@
       focus: false,
       // celular/tablet sem teclado: começa com o desenho do teclado recolhido
       kbCollapsed: !!(window.matchMedia && matchMedia('(pointer: coarse)').matches && window.innerWidth < 920),
+      quality: 'auto', // auto | high | balanced | low
     },
     store.get('settings', {})
   );
@@ -1156,6 +1157,7 @@
     $('#setFold').checked = player.fold;
     $('#setLeadIn').value = player.leadIn;
     $('#setFocus').checked = settings.focus;
+    $('#setQuality').value = settings.quality;
     $('#midiStatus').textContent = midi.input.enabled ? (midi.input.devices.length ? midi.input.devices.join(', ') : 'nenhum teclado MIDI conectado') : navigator.requestMIDIAccess ? 'desconectado' : 'não suportado neste navegador';
     fillAi();
   }
@@ -1200,6 +1202,11 @@
     store.set('leadIn', player.leadIn);
   };
   $('#setFocus').onchange = (e) => setFocus(e.target.checked);
+  $('#setQuality').onchange = (e) => {
+    settings.quality = e.target.value;
+    saveSettings();
+    applyQuality(settings.quality);
+  };
   $('#resetScores').onclick = () => {
     if (confirm('Apagar todos os recordes?')) {
       store.remove('best');
@@ -1735,10 +1742,34 @@
     };
   }
 
+  // Desempenho: se o computador não acompanhar (menos de ~40 quadros/s por alguns
+  // segundos), entra no modo leve sozinho.
+  const frameTimes = [];
+  let slowStreak = 0;
+  function watchPerformance(dtMs) {
+    if (settings.quality !== 'auto' || visuals.quality === 'low' || document.hidden) return;
+    if (dtMs > 250) return; // aba voltou do segundo plano
+    frameTimes.push(dtMs);
+    if (frameTimes.length < 90) return;
+    const sorted = frameTimes.slice().sort((a, b) => a - b);
+    const median = sorted[45];
+    frameTimes.length = 0;
+    slowStreak = median > 25 ? slowStreak + 1 : 0;
+    if (slowStreak >= 2) {
+      applyQuality('low');
+      toast('Seu computador estava sofrendo para desenhar tudo, então ativei o modo leve. Dá para mudar em Ajustes → Tela e jogo.', 'warn');
+    }
+  }
+  function applyQuality(q) {
+    visuals.setQuality(q === 'auto' ? 'balanced' : q);
+    document.body.classList.toggle('lite', visuals.quality === 'low');
+  }
+
   let last = performance.now();
   let frameNo = 0;
   function frame(now) {
     const dt = Math.max(0, (now - last) / 1000);
+    watchPerformance(now - last);
     last = now;
     player.update(dt);
     const S = buildState(Math.min(dt, 0.1));
@@ -1774,6 +1805,7 @@
       gram: $('#cvGram'),
     });
     document.body.classList.toggle('focus', !!settings.focus);
+    applyQuality(settings.quality);
     bus.emit('player:speed', player.speed);
     setMetronome(player.metronome);
     player.load(null);

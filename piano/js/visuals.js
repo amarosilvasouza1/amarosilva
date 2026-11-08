@@ -37,7 +37,9 @@
       if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(canvas);
     }
     resize() {
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      // Qualidade: "alta" usa a resolução da tela, "equilibrada" limita a 1,5x, "leve" usa 1x.
+      const q = visuals.quality;
+      const dpr = q === 'low' ? 1 : Math.min(q === 'high' ? 2 : 1.5, window.devicePixelRatio || 1);
       const w = Math.max(1, Math.floor(this.cv.clientWidth));
       const h = Math.max(1, Math.floor(this.cv.clientHeight));
       if (w === this.w && h === this.h && dpr === this.dpr) return;
@@ -884,7 +886,7 @@
       ctx.lineWidth = 1;
       ctx.stroke();
       if (st === 'hint') {
-        ctx.fillStyle = alpha(C.blue, 0.22 + 0.18 * (0.5 + 0.5 * Math.sin(S.now * 8)));
+        ctx.fillStyle = alpha(C.blue, 0.32);
         rrect(ctx, x + 1, felt, ww - 2, h - felt - 1, 4);
         ctx.fill();
       }
@@ -942,14 +944,24 @@
       return;
     }
     const dur = Math.max(1, S.song.duration);
-    const [lo, hi] = S.song.range;
-    const span = Math.max(12, hi - lo + 1);
-    for (const n of S.notes) {
-      ctx.fillStyle = n.judge === 'miss' ? C.red : n.hand === 'L' ? C.blue : C.teal;
-      ctx.globalAlpha = 0.75;
-      ctx.fillRect(4 + (n.time / dur) * (w - 8), h - 4 - ((n.midi - lo + 0.5) / span) * (h - 8) - 1, Math.max(1.5, (n.duration / dur) * (w - 8)), 2);
+    const key = S.song.id + ':' + S.notes.length + ':' + w + 'x' + h + ':' + p.dpr + ':' + C.teal;
+    if (p.layerKey !== key) {
+      // camada com as notas da música, feita uma vez por música/tamanho
+      const off = p.layer || (p.layer = document.createElement('canvas'));
+      off.width = Math.floor(w * p.dpr);
+      off.height = Math.floor(h * p.dpr);
+      const o = off.getContext('2d');
+      o.setTransform(p.dpr, 0, 0, p.dpr, 0, 0);
+      const [lo, hi] = S.song.range;
+      const span = Math.max(12, hi - lo + 1);
+      o.globalAlpha = 0.75;
+      for (const n of S.notes) {
+        o.fillStyle = n.hand === 'L' ? C.blue : C.teal;
+        o.fillRect(4 + (n.time / dur) * (w - 8), h - 4 - ((n.midi - lo + 0.5) / span) * (h - 8) - 1, Math.max(1.5, (n.duration / dur) * (w - 8)), 2);
+      }
+      p.layerKey = key;
     }
-    ctx.globalAlpha = 1;
+    ctx.drawImage(p.layer, 0, 0, w, h);
     const x = 4 + (util.clamp(S.clock, 0, dur) / dur) * (w - 8);
     ctx.fillStyle = alpha(C.blue, 0.13);
     rrect(ctx, 1, 1, Math.max(0, x - 1), h - 2, 6);
@@ -959,6 +971,46 @@
   }
 
   const panels = {};
+  let frameNo = 0;
+
+  /**
+   * Um canvas só é redesenhado quando algo nele muda — cada redesenho custa uma
+   * cópia inteira do canvas para a tela, e era isso que travava.
+   */
+  function shouldDraw(k, p, S, low, silent) {
+    if (p.dirty) return true;
+    const moving = S.song ? S.state === 'playing' || S.state === 'waiting' : true;
+    switch (k) {
+      case 'highway': {
+        if (S.song) return moving || frameNo % (low ? 6 : 3) === 0;
+        // modo livre parado: só redesenha enquanto há algo animando
+        const busy = S.held.size > 0 || fx.parts.length > 0 || fx.flash.length > 0 || S.ripples.length > 0 || S.popups.length > 0 || S.live.some((l) => l.end == null || S.clock - l.end < S.lookahead + 0.2);
+        return busy ? !low || frameNo % 2 === 0 : frameNo % 30 === 0;
+      }
+      case 'piano': {
+        // só quando o conjunto de teclas acesas muda
+        let sig = S.pianoRange[0] + ':' + S.pianoRange[1] + '|';
+        for (const m of S.held.keys()) sig += m + ',';
+        sig += '|';
+        for (const m of S.autoMidis) sig += m + ',';
+        sig += '|';
+        for (const m of S.hintMidis) sig += m + ',';
+        if (sig === p.sig) return false;
+        p.sig = sig;
+        return true;
+      }
+      case 'progress':
+        return frameNo % (low ? 20 : 8) === 0;
+      case 'dial':
+      case 'roll':
+        return moving ? frameNo % (low ? 3 : 2) === 0 : frameNo % 15 === 0;
+      default:
+        // medidores de áudio: metade da taxa; parados quando não há som
+        if (silent) return frameNo % 30 === 0;
+        return frameNo % (low ? 4 : 2) === 0;
+    }
+  }
+
   const visuals = {
     MONO,
     init(map) {
@@ -968,13 +1020,27 @@
       bus.on('theme', () => {
         readColors();
         gram.off = null;
+        visuals.invalidate();
       });
+      bus.on('keymap', () => visuals.invalidate());
+    },
+    quality: 'balanced', // high | balanced | low
+    setQuality(q) {
+      this.quality = q;
+      for (const p of Object.values(panels)) {
+        p.w = 0; // força recalcular a resolução
+        p.resize();
+      }
     },
     frame(S) {
-      if (audio.ctx) pushLevels();
-      for (const p of Object.values(panels)) {
+      frameNo++;
+      const low = this.quality === 'low';
+      const silent = !audio.ctx || hist.loudS < 0.0004;
+      if (audio.ctx && (frameNo % 2 === 0 || !low)) pushLevels();
+      for (const [k, p] of Object.entries(panels)) {
         if (!p.visible) continue;
-        if (p.cv.width !== Math.floor(p.cv.clientWidth * p.dpr) || p.cv.height !== Math.floor(p.cv.clientHeight * p.dpr)) p.resize();
+        if (!shouldDraw(k, p, S, low, silent)) continue;
+        p.dirty = false;
         try {
           p.draw(p, S);
         } catch (e) {
@@ -982,6 +1048,9 @@
           p._err = true;
         }
       }
+    },
+    invalidate() {
+      for (const p of Object.values(panels)) p.dirty = true;
     },
     panels,
     readColors,

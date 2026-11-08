@@ -76,6 +76,10 @@ A outra mão toca sozinha. Se a música tiver notas fora do alcance do seu tecla
 
 > Arquivos de áudio (mp3/wav) não viram notas automaticamente. Use a versão MIDI da música ou peça para a IA.
 
+## Desempenho
+
+Se o computador for mais fraco, o app entra sozinho no **modo leve** (menos resolução nos desenhos e medidores mais calmos). Dá para escolher em **Ajustes → Tela e jogo → Desempenho**: Automático, Alta qualidade, Equilibrado ou Leve. Os painéis só são redesenhados quando algo neles muda.
+
 ## IA própria (Claude, OpenAI, Gemini, Ollama…)
 
 Em **⚙ → IA** escolha o provedor e cole a sua chave:

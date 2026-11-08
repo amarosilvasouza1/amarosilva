@@ -36,7 +36,7 @@
       this.sustain = false;
       this.scheduled = new Set(); // vozes agendadas (autoplay)
       this.allVoices = [];
-      this.maxVoices = 110;
+      this.maxVoices = 72; // acima disso, a nota mais antiga é cortada
     }
 
     /** Cria/resume o AudioContext (precisa de um gesto do usuário). */
@@ -67,7 +67,7 @@
       this.dry = ctx.createGain();
       this.wet = ctx.createGain();
       this.convolver = ctx.createConvolver();
-      this.convolver.buffer = this._makeImpulse(2.6, 2.8);
+      this.convolver.buffer = this._makeImpulse(1.8, 2.6); // reverb mais curto = menos processamento
       this.master = ctx.createGain();
       this.comp = ctx.createDynamicsCompressor();
       this.comp.threshold.value = -12;

@@ -114,6 +114,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .card.dark { background: var(--dark); border-color: var(--dark); }
 body.focus .stage { grid-template-columns: 264px minmax(0, 1fr); }
 body.focus .instr { display: none; }
+body.lite .p-gram, body.lite .p-vector { display: none; }
+@media (min-width: 1501px) { body.lite .instr { grid-template-areas: 'dial roll roll' 'wave wave wave' 'scope spec spec'; } }
 
 /* lista de músicas */
 .sidebar { display: flex; flex-direction: column; padding: 10px; gap: 8px; overflow: hidden; }
@@ -207,7 +209,7 @@ body.focus .instr { display: none; }
 .kc.empty { opacity: 0.4; }
 .kc.ghost { visibility: hidden; }
 .kc.tail { border-top-left-radius: 0; }
-.kc.hint { outline: 2px solid var(--blue); outline-offset: 1px; animation: hint 0.7s infinite alternate; }
+.kc.hint { outline: 2px solid var(--blue); outline-offset: 2px; }
 .kc.auto { background: var(--teal); border-color: var(--teal); }
 .kc.auto .kc-note, .kc.auto .kc-key { color: #fff; }
 .kc.on, .kc.down { background: var(--accent); border-color: var(--accent); transform: translateY(2px); box-shadow: none; }
