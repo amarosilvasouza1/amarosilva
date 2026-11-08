@@ -103,7 +103,7 @@ Nota = letra + `#`/`b` + oitava (C4 = Dó central) · acorde com `+` · `:duraç
 
 ## Som
 
-Piano de cauda com samples reais (**Salamander Grand Piano**, CC-BY 3.0, Alexander Holm — carregados do CDN do Tone.js), reverb de sala e posição estéreo por altura da nota. Também tem piano elétrico, synth, cordas, órgão, caixinha de música e um piano sintetizado que funciona sem internet.
+Piano de cauda com samples reais (**Salamander Grand Piano**, CC-BY 3.0, Alexander Holm — carregados do CDN do Tone.js), reverb de sala e posição estéreo por altura da nota. Também tem **violão**, guitarra, harpa, violino, flauta e xilofone com gravações reais (projeto tonejs-instruments, de fontes livres: VSCO 2 Community Edition, Karoryfer e Freesound), além de piano elétrico, órgão, caixinha de música, synth, pad e um piano sintetizado que funciona sem internet. Troque o instrumento no seletor do rodapé; cada um é baixado na primeira vez que você escolhe.
 
 ## Ferramentas usadas
 

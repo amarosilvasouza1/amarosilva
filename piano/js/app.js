@@ -1145,7 +1145,7 @@
   $$('#setTabs button').forEach((b) => (b.onclick = () => setSetTab(b.dataset.tab)));
 
   function fillSettings() {
-    $('#setInstrument').innerHTML = PN.INSTRUMENTS.map((i) => '<option value="' + i.id + '"' + (audio.instrument === i.id ? ' selected' : '') + '>' + esc(i.name) + '</option>').join('');
+    $('#setInstrument').innerHTML = instrumentOptions();
     $('#setVolume').value = Math.round(audio.volume * 100);
     $('#setReverb').value = Math.round(audio.reverbAmount * 100);
     $('#setMetro').checked = player.metronome;
@@ -1573,16 +1573,43 @@
   }
 
   // ------------------------------------------------------------------ status / rodapé
-  bus.on('samples:progress', (d, t) => ($('#sampleInd').textContent = 'carregando piano ' + d + '/' + t));
-  bus.on('samples:ready', (failed) => ($('#sampleInd').textContent = failed ? 'piano de cauda (' + failed + ' falhas)' : 'piano de cauda'));
-  bus.on('samples:error', () => {
-    $('#sampleInd').textContent = 'piano sintetizado';
-    toast('Sem internet para o piano de cauda; usando o piano sintetizado.', 'warn');
+  // instrumentos: lista agrupada (Ajustes e seletor do rodapé)
+  const instName = (id) => (PN.INSTRUMENTS.find((i) => i.id === id) || { name: id }).name;
+  function instrumentOptions() {
+    const groups = {};
+    for (const i of PN.INSTRUMENTS) (groups[i.group] = groups[i.group] || []).push(i);
+    return Object.entries(groups)
+      .map(([g, list]) => '<optgroup label="' + esc(g) + '">' + list.map((i) => '<option value="' + i.id + '"' + (audio.instrument === i.id ? ' selected' : '') + '>' + esc(i.name) + '</option>').join('') + '</optgroup>')
+      .join('');
+  }
+  function updateSampleInd() {
+    const id = audio.instrument;
+    const st = audio.stateOf(id);
+    $('#sampleInd').classList.toggle('hidden', st !== 'loading' && st !== 'error');
+    if (st === 'error') $('#sampleInd').textContent = 'sem internet: som sintetizado';
+  }
+  $('#instQuick').innerHTML = instrumentOptions();
+  $('#instQuick').onchange = (e) => {
+    audio.ensure();
+    audio.setInstrument(e.target.value);
+    e.target.blur();
+  };
+  bus.on('samples:progress', (d, t, id) => {
+    if (id !== audio.instrument) return;
+    $('#sampleInd').classList.remove('hidden');
+    $('#sampleInd').textContent = 'carregando ' + instName(id).toLowerCase() + ' ' + d + '/' + t;
+  });
+  bus.on('samples:ready', (failed, id) => {
+    if (id === audio.instrument) updateSampleInd();
+  });
+  bus.on('samples:error', (failed, id) => {
+    updateSampleInd();
+    if (id === audio.instrument) toast('Sem internet para as gravações de ' + instName(id).toLowerCase() + '; usando um som sintetizado.', 'warn');
   });
   bus.on('instrument', (id) => {
-    const inst = PN.INSTRUMENTS.find((i) => i.id === id);
-    if (id !== 'grand') $('#sampleInd').textContent = inst.name.toLowerCase();
-    else if (audio.sampleState === 'ready') $('#sampleInd').textContent = 'piano de cauda';
+    $('#instQuick').value = id;
+    if ($('#setInstrument')) $('#setInstrument').value = id;
+    updateSampleInd();
   });
   bus.on('midi:devices', (list) => {
     $('#midiInd').classList.toggle('hidden', !list.length);

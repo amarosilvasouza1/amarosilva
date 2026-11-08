@@ -96,7 +96,11 @@ As duas mãos começam juntas no tempo 0; mantenha o mesmo total de tempos nas d
       input_schema: {
         type: 'object',
         properties: {
-          instrument: { type: 'string', enum: ['grand', 'epiano', 'synth', 'pad', 'organ', 'musicbox', 'softpiano'] },
+          instrument: {
+            type: 'string',
+            enum: (PN.INSTRUMENTS || []).map((i) => i.id),
+            description: (PN.INSTRUMENTS || []).map((i) => i.id + ' = ' + i.name).join(', '),
+          },
           speed_percent: { type: 'number', description: '25 a 200' },
           volume_percent: { type: 'number', description: '0 a 100' },
           reverb_percent: { type: 'number', description: '0 a 100' },

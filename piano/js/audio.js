@@ -11,14 +11,58 @@
   for (let o = 1; o <= 7; o++) SAMPLE_NAMES.push('C' + o, 'D#' + o, 'F#' + o, 'A' + o);
   SAMPLE_NAMES.push('C8');
 
+  // Violão, guitarra, harpa, violino, flauta e xilofone: amostras do projeto
+  // tonejs-instruments (Nicholaus Brosowsky), vindas de fontes livres
+  // (VSCO 2 Community Edition, Karoryfer e Freesound/quartertone).
+  const TJI = 'https://nbrosowsky.github.io/tonejs-instruments/samples/';
+  const SAMPLE_SETS = {
+    grand: { base: SAMPLE_BASE, names: SAMPLE_NAMES, maxDist: 6, gain: 0.95, release: (m) => (m >= 89 ? 0.6 : m < 48 ? 0.22 : 0.15), fallback: 'softpiano' },
+    nylon: {
+      base: TJI + 'guitar-nylon/',
+      names: ['B1', 'D2', 'E2', 'F#2', 'G#2', 'A2', 'B2', 'C#3', 'D3', 'E3', 'F#3', 'G3', 'A3', 'B3', 'C#4', 'D#4', 'E4', 'F#4', 'G#4', 'A4', 'B4', 'C#5', 'D5', 'E5', 'F#5', 'G#5', 'A5', 'A#5'],
+      maxDist: 12, gain: 1.1, release: () => 0.12, fallback: 'pluck',
+    },
+    eguitar: {
+      base: TJI + 'guitar-electric/',
+      names: ['C#2', 'E2', 'F#2', 'A2', 'C3', 'D#3', 'F#3', 'A3', 'C4', 'D#4', 'F#4', 'A4', 'C5', 'D#5', 'F#5', 'A5', 'C6'],
+      maxDist: 12, gain: 0.85, release: () => 0.08, fallback: 'pluck',
+    },
+    harp: {
+      base: TJI + 'harp/',
+      names: ['E1', 'G1', 'B1', 'D2', 'F2', 'A2', 'C3', 'E3', 'G3', 'B3', 'D4', 'F4', 'A4', 'C5', 'E5', 'G5', 'B5', 'D6', 'F6', 'A6', 'B6', 'D7', 'F7'],
+      maxDist: 12, gain: 1.0, release: () => 0.8, fallback: 'pluck',
+    },
+    violin: {
+      base: TJI + 'violin/',
+      names: ['A3', 'C4', 'E4', 'G4', 'A4', 'C5', 'E5', 'G5', 'A5', 'C6', 'E6', 'G6', 'A6', 'C7'],
+      maxDist: 12, gain: 0.8, release: () => 0.22, fallback: 'pad',
+    },
+    flute: {
+      base: TJI + 'flute/',
+      names: ['C4', 'E4', 'A4', 'C5', 'E5', 'A5', 'C6', 'E6', 'A6', 'C7'],
+      maxDist: 12, gain: 0.85, release: () => 0.14, fallback: 'pad',
+    },
+    xylo: {
+      base: TJI + 'xylophone/',
+      names: ['G4', 'C5', 'G5', 'C6', 'G6', 'C7', 'G7', 'C8'],
+      maxDist: 14, gain: 0.9, release: () => 0.35, fallback: 'musicbox',
+    },
+  };
+
   const INSTRUMENTS = [
-    { id: 'grand', name: 'Piano de Cauda', icon: '🎹' },
-    { id: 'epiano', name: 'Piano Elétrico', icon: '✨' },
-    { id: 'synth', name: 'Synth Neon', icon: '⚡' },
-    { id: 'pad', name: 'Cordas / Pad', icon: '🌌' },
-    { id: 'organ', name: 'Órgão', icon: '⛪' },
-    { id: 'musicbox', name: 'Caixinha de Música', icon: '🎁' },
-    { id: 'softpiano', name: 'Piano Suave (offline)', icon: '🌙' },
+    { id: 'grand', name: 'Piano de cauda', group: 'Teclas' },
+    { id: 'epiano', name: 'Piano elétrico', group: 'Teclas' },
+    { id: 'softpiano', name: 'Piano suave (sem internet)', group: 'Teclas' },
+    { id: 'organ', name: 'Órgão', group: 'Teclas' },
+    { id: 'nylon', name: 'Violão', group: 'Cordas' },
+    { id: 'eguitar', name: 'Guitarra', group: 'Cordas' },
+    { id: 'harp', name: 'Harpa', group: 'Cordas' },
+    { id: 'violin', name: 'Violino', group: 'Cordas' },
+    { id: 'flute', name: 'Flauta', group: 'Sopro e percussão' },
+    { id: 'xylo', name: 'Xilofone', group: 'Sopro e percussão' },
+    { id: 'musicbox', name: 'Caixinha de música', group: 'Sopro e percussão' },
+    { id: 'synth', name: 'Synth', group: 'Eletrônicos' },
+    { id: 'pad', name: 'Pad (cordas sintéticas)', group: 'Eletrônicos' },
   ];
 
   const freq = (m) => 440 * Math.pow(2, (m - 69) / 12);
@@ -29,8 +73,10 @@
       this.instrument = store.get('instrument', 'grand');
       this.volume = store.get('volume', 0.8);
       this.reverbAmount = store.get('reverb', 0.25);
-      this.samples = new Map(); // midi -> AudioBuffer
-      this.sampleState = 'idle';
+      this.sets = {}; // id -> { state, map: Map(midi -> AudioBuffer) }
+      for (const id of Object.keys(SAMPLE_SETS)) this.sets[id] = { state: 'idle', map: new Map() };
+      this.samples = this.sets.grand.map; // compatibilidade
+      if (!INSTRUMENTS.some((i) => i.id === this.instrument)) this.instrument = 'grand';
       this.live = new Map(); // midi -> voice (notas tocadas pelo usuário)
       this.held = new Set(); // teclas fisicamente pressionadas
       this.sustain = false;
@@ -46,7 +92,7 @@
         if (!AC) return null;
         this.ctx = new AC({ latencyHint: 'interactive' });
         this._buildGraph();
-        if (this.instrument === 'grand') this.loadSamples();
+        if (SAMPLE_SETS[this.instrument]) this.loadSamples(this.instrument);
       }
       if (this.ctx.state === 'suspended') this.ctx.resume();
       return this.ctx;
@@ -142,7 +188,7 @@
       if (!INSTRUMENTS.some((i) => i.id === id)) return;
       this.instrument = id;
       store.set('instrument', id);
-      if (id === 'grand' && this.ctx) this.loadSamples();
+      if (SAMPLE_SETS[id] && this.ctx) this.loadSamples(id);
       bus.emit('instrument', id);
     }
 
@@ -172,58 +218,72 @@
       return Math.sqrt(sum / d.length);
     }
 
-    async loadSamples() {
-      if (this.sampleState === 'loading' || this.sampleState === 'ready') return;
+    get sampleState() {
+      return this.sets.grand.state;
+    }
+    stateOf(id) {
+      return this.sets[id] ? this.sets[id].state : 'none';
+    }
+
+    /** Baixa as gravações de um instrumento (só na primeira vez que ele é escolhido). */
+    async loadSamples(id = 'grand') {
+      const def = SAMPLE_SETS[id];
+      const set = this.sets[id];
+      if (!def || !set || set.state === 'loading' || set.state === 'ready') return;
       if (!this.ctx) return;
-      this.sampleState = 'loading';
+      set.state = 'loading';
       let done = 0;
       let failed = 0;
-      const total = SAMPLE_NAMES.length;
-      bus.emit('samples:progress', 0, total);
-      const queue = SAMPLE_NAMES.slice();
+      const total = def.names.length;
+      bus.emit('samples:progress', 0, total, id);
+      const queue = def.names.slice();
       const worker = async () => {
         while (queue.length) {
           const name = queue.shift();
           try {
-            const res = await fetch(SAMPLE_BASE + name.replace('#', 's') + '.mp3');
+            const res = await fetch(def.base + name.replace('#', 's') + '.mp3');
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const arr = await res.arrayBuffer();
             const buf = await this.ctx.decodeAudioData(arr);
-            this.samples.set(util.nameToMidi(name), buf);
+            set.map.set(util.nameToMidi(name), buf);
           } catch (e) {
             failed++;
           }
           done++;
-          bus.emit('samples:progress', done, total);
+          bus.emit('samples:progress', done, total, id);
         }
       };
       await Promise.all([worker(), worker(), worker(), worker(), worker(), worker()]);
-      this.sampleState = failed === total ? 'error' : 'ready';
-      bus.emit(this.sampleState === 'ready' ? 'samples:ready' : 'samples:error', failed);
+      set.state = failed === total ? 'error' : 'ready';
+      bus.emit(set.state === 'ready' ? 'samples:ready' : 'samples:error', failed, id);
     }
 
-    _nearestSample(midi) {
+    _nearestSample(midi, id = 'grand') {
+      const def = SAMPLE_SETS[id];
       let best = null;
       let bestD = 99;
-      for (const [m, buf] of this.samples) {
+      for (const [m, buf] of this.sets[id].map) {
         const d = Math.abs(m - midi);
         if (d < bestD) {
           bestD = d;
           best = { midi: m, buf };
         }
       }
-      return bestD <= 6 ? best : null;
+      return bestD <= def.maxDist ? best : null;
     }
 
     // ---------------------------------------------------------------- vozes
     _voice(midi, vel, when) {
-      const inst = this.instrument;
-      if (inst === 'grand') {
-        const s = this._nearestSample(midi);
-        if (s) return this._sampleVoice(midi, vel, when, s);
-        return this._softPianoVoice(midi, vel, when);
+      let inst = this.instrument;
+      const def = SAMPLE_SETS[inst];
+      if (def) {
+        const s = this._nearestSample(midi, inst);
+        if (s) return this._sampleVoice(midi, vel, when, s, def);
+        inst = def.fallback; // enquanto as gravações carregam (ou sem internet)
       }
       switch (inst) {
+        case 'pluck':
+          return this._pluckVoice(midi, vel, when);
         case 'epiano':
           return this._epianoVoice(midi, vel, when);
         case 'synth':
@@ -284,7 +344,7 @@
       return v;
     }
 
-    _sampleVoice(midi, vel, when, s) {
+    _sampleVoice(midi, vel, when, s, def = SAMPLE_SETS.grand) {
       const ctx = this.ctx;
       const src = ctx.createBufferSource();
       src.buffer = s.buf;
@@ -294,14 +354,47 @@
       filt.frequency.value = 900 + Math.pow(vel, 1.7) * 17000;
       filt.Q.value = 0.3;
       const g = ctx.createGain();
-      const amp = (0.12 + 0.88 * Math.pow(vel, 1.5)) * 0.95;
+      const amp = (0.12 + 0.88 * Math.pow(vel, 1.5)) * def.gain;
       g.gain.setValueAtTime(0, when);
       g.gain.linearRampToValueAtTime(amp, when + 0.004);
       src.connect(filt).connect(g);
       src.start(when);
       const v = { midi, start: when, sources: [src] };
-      const rel = midi >= 89 ? 0.6 : midi < 48 ? 0.22 : 0.15;
-      return this._finishVoice(v, g, rel);
+      return this._finishVoice(v, g, def.release(midi));
+    }
+
+    /** Corda dedilhada sintetizada (usada enquanto as gravações de violão/guitarra/harpa carregam). */
+    _pluckVoice(midi, vel, when) {
+      const ctx = this.ctx;
+      const f = freq(midi);
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'lowpass';
+      filt.Q.value = 0.8;
+      filt.frequency.setValueAtTime(Math.min(14000, f * (4 + vel * 10)), when);
+      filt.frequency.exponentialRampToValueAtTime(Math.max(150, f * 1.3), when + 0.7);
+      const sources = [];
+      [
+        ['triangle', 1, 0],
+        ['sawtooth', 0.22, 3],
+      ].forEach(([type, a, det]) => {
+        const o = ctx.createOscillator();
+        o.type = type;
+        o.frequency.value = f;
+        o.detune.value = det;
+        const g = ctx.createGain();
+        g.gain.value = a;
+        o.connect(g).connect(filt);
+        o.start(when);
+        sources.push(o);
+      });
+      const out = ctx.createGain();
+      const amp = 0.28 * (0.25 + 0.75 * vel);
+      out.gain.setValueAtTime(0, when);
+      out.gain.linearRampToValueAtTime(amp, when + 0.002);
+      out.gain.setTargetAtTime(0, when + 0.002, util.clamp(1.1 * Math.sqrt(220 / f), 0.2, 1.8));
+      filt.connect(out);
+      const v = { midi, start: when, sources };
+      return this._finishVoice(v, out, 0.1);
     }
 
     _softPianoVoice(midi, vel, when) {

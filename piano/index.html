@@ -159,7 +159,8 @@
     <span id="metroInd" class="ind click" title="Metrônomo (tecla à esquerda do 1)"><svg class="i"><use href="#i-metronome"/></svg>metrônomo</span>
     <span id="recInd" class="ind rec hidden">● rec 0:00</span>
     <span id="midiInd" class="ind hidden">midi</span>
-    <span id="sampleInd" class="ind">piano —</span>
+    <label class="ind inst" title="Instrumento"><svg class="i"><use href="#i-music"/></svg><select id="instQuick" aria-label="Instrumento"></select></label>
+    <span id="sampleInd" class="ind hidden">—</span>
   </footer>
 </div>
 
@@ -289,7 +290,7 @@
         <label class="field chk"><input type="checkbox" id="setMetro"> metrônomo</label>
         <label class="field">BPM no modo livre <input type="number" id="setFreeBpm" min="30" max="240"></label>
         <div class="field"><span>Teclado MIDI (USB/Bluetooth)</span><span id="midiStatus" class="muted">—</span><button class="tb" id="midiConnect">Conectar</button></div>
-        <p class="muted small">Piano de cauda: samples do Salamander Grand Piano (CC-BY 3.0, Alexander Holm). Sem internet, entra um piano sintetizado.</p>
+        <p class="muted small">Piano de cauda: gravações do Salamander Grand Piano (CC-BY 3.0, Alexander Holm). Violão, guitarra, harpa, violino, flauta e xilofone: gravações reunidas no projeto tonejs-instruments (Nicholaus Brosowsky), de fontes livres (VSCO 2 Community Edition, Karoryfer e Freesound/quartertone). Cada instrumento é baixado na primeira vez que você escolhe; sem internet, entra um som sintetizado parecido.</p>
       </div>
       <div class="set-pane hidden" data-pane="view">
         <label class="field">Tema <select id="setTheme"><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
