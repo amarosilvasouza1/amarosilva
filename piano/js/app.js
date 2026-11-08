@@ -654,7 +654,7 @@
   })();
 
   // ------------------------------------------------------------------ lista de músicas (lateral)
-  const SOURCE_BADGE = { midi: 'midi', ai: 'ia', sheet: 'letras', rec: 'gravação', notation: 'notação' };
+  const SOURCE_BADGE = { midi: 'midi', musicxml: 'partitura', ai: 'ia', sheet: 'letras', rec: 'gravação', notation: 'notação' };
   let sbFilter = 'all';
   let sbFilterPending = null;
   // miniatura: um pedacinho do piano roll da própria música
@@ -813,18 +813,16 @@
   async function importFiles(files) {
     let last = null;
     for (const f of files) {
-      if (/\.(mp3|wav|ogg|m4a|flac|aac)$/i.test(f.name) || /^audio\/(?!midi|x-midi)/.test(f.type)) {
-        toast('"' + f.name + '" é um arquivo de áudio. Aqui só entra MIDI (.mid).', 'warn');
-        continue;
-      }
+      // O tipo informado pelo sistema não é confiável (no Windows um .mid vem como "audio/mid"),
+      // então o conteúdo do arquivo é que decide.
       try {
-        const parsed = midi.parseMidi(await f.arrayBuffer());
-        if (!parsed.notes.length) throw new Error('nenhuma nota encontrada');
-        const song = songs.songFromMidi(parsed, f.name);
+        if (f.size > 20 * 1024 * 1024) throw new PN.importers.ImportError('"' + f.name + '" é grande demais para ser uma música MIDI.');
+        const song = await PN.importers.songFromFile(await f.arrayBuffer(), f.name);
         songs.library.add(song);
         last = song;
       } catch (e) {
-        toast('Não consegui ler "' + f.name + '": ' + e.message, 'err');
+        console.warn('importação', f.name, e);
+        toast(e instanceof PN.importers.ImportError ? e.message : 'Não consegui ler "' + f.name + '": ' + e.message, 'err');
       }
     }
     if (last) {
@@ -924,11 +922,10 @@
     }
     if (!res.ok) throw new Error('o servidor respondeu ' + res.status);
     const buf = await res.arrayBuffer();
-    if (buf.byteLength > 5 * 1024 * 1024) throw new Error('arquivo grande demais');
-    const parsed = midi.parseMidi(buf);
-    if (!parsed.notes.length) throw new Error('o arquivo não tem notas');
-    const name = title || decodeURIComponent(url.split('/').pop().split('?')[0]);
-    const song = songs.songFromMidi(parsed, name);
+    if (buf.byteLength > 20 * 1024 * 1024) throw new Error('arquivo grande demais');
+    let name = decodeURIComponent(url.split('/').pop().split('?')[0]) || 'música.mid';
+    const song = await PN.importers.songFromFile(buf, name);
+    if (title) song.title = title;
     songs.library.add(song);
     return song;
   }

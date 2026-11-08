@@ -64,7 +64,7 @@ A outra mão toca sozinha. Se a música tiver notas fora do alcance do seu tecla
   - **Fáceis**: Escala de Dó, Dó Ré Mi Fá, Maria Tinha um Carneirinho, Brilha Brilha Estrelinha, Frei Martinho, Seu Lobato Tinha um Sítio.
   - **Festas**: Parabéns pra Você, Jingle Bells, Noite Feliz, When the Saints Go Marching In.
   - **Clássicas**: Ode à Alegria, Minueto em Sol, Cânone em Ré, Na Gruta do Rei da Montanha, Gymnopédie nº 1, Pequena Serenata Noturna, Für Elise, Prelúdio em Dó.
-- **Arquivos MIDI** (`.mid`): arraste em qualquer lugar da tela ou use **+ IMPORTAR**. Também dá para colar um link direto de `.mid`.
+- **Arquivos MIDI** (`.mid`), **MusicXML** (`.musicxml`, `.mxl`) ou um `.zip` com MIDI dentro: arraste em qualquer lugar da tela ou use **Importar**. Também dá para colar um link direto de `.mid`. O app olha o conteúdo do arquivo, então avisa quando o "MIDI" baixado na verdade é uma página da internet ou um áudio.
 - **Partituras de letras** (Virtual Piano / Roblox): cole algo como `[tu] y t r e | [qe] w q 0`.
 - **Gravar**: aperte **● GRAVAR**, toque, e a gravação vira uma música (dá para baixar em `.mid`).
 - **Peça para a IA** criar, arranjar ou baixar músicas.
@@ -120,6 +120,7 @@ piano/
   js/audio.js       motor de som (samples + sintetizadores)
   js/midi.js        leitura/gravação de MIDI e teclado MIDI
   js/songs.js       biblioteca, notação e partituras de letras
+  js/importers.js   reconhece e importa MIDI, MusicXML, .zip e .txt
   js/keymap.js      mapas de teclado e formatos (ABNT2/ANSI/ISO)
   js/game.js        modos ouvir / aprender / jogar
   js/visuals.js     pista 3D, piano, piano roll e medidores

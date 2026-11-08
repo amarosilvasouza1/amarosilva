@@ -121,6 +121,7 @@
       const track = { name: '', events: [], program: 0 };
       let tick = 0;
       let status = 0;
+      try {
       while (p < end && p < data.byteLength) {
         tick += vlq();
         let b = data.getUint8(p);
@@ -170,7 +171,10 @@
           p++;
         }
       }
-      p = end;
+      } catch (e) {
+        /* faixa cortada no meio: fica com o que deu para ler */
+      }
+      p = Math.min(end, data.byteLength);
       rawTracks.push(track);
     }
 
