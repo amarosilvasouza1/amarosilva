@@ -48,6 +48,7 @@ As duas mãos começam juntas no tempo 0; mantenha o mesmo total de tempos nas d
           right_hand: { type: 'string', description: 'Notas da mão direita na notação Pianeon' },
           left_hand: { type: 'string', description: 'Notas da mão esquerda na notação Pianeon (opcional)' },
           open_mode: { type: 'string', enum: ['none', 'watch', 'practice', 'challenge'], description: 'Abrir a música logo depois de adicionar (padrão: none)' },
+          force_new: { type: 'boolean', description: 'Só use se já existir uma música com o mesmo título e esta for um arranjo diferente' },
         },
         required: ['title', 'bpm', 'right_hand'],
       },
@@ -124,7 +125,9 @@ ${NOTATION_HELP}
 Boas práticas:
 - Para iniciantes, prefira arranjos simples (melodia na direita, notas longas de baixo na esquerda) e velocidades de 60–80%.
 - Antes de chamar add_song, confira a soma dos tempos de cada compasso. Se a ferramenta devolver erros, corrija e tente de novo.
+- O <contexto_app> traz os títulos da biblioteca. Se a música pedida já estiver lá, abra com start_song em vez de criar outra igual.
 - Quando pedirem uma música: se você tiver um link direto de .mid (por exemplo, achado com a busca na web), tente download_midi; se falhar ou não houver link, escreva um arranjo com add_song. Depois ofereça abrir no modo APRENDER.
+- Se for uma música que você não vai escrever (por exemplo, protegida por direito autoral), não pare na recusa. Em uma frase, diga que não dá para você escrever as notas e mostre como a pessoa consegue o arquivo MIDI: um link de busca como https://musescore.com/sheetmusic?text=NOME+DA+MUSICA (troque os espaços por +), e explique que é só baixar o .mid e arrastar na tela ou usar Importar. Se a busca na web estiver ligada e você achar um link direto de .mid, pode tentar download_midi. Também pode oferecer um exercício original no mesmo estilo.
 - Teclado padrão ("teclado inteiro"): cada fileira do teclado do computador é uma oitava (Z…=Dó2, A…=Dó3, Q…=Dó4, números=Dó5) e Shift sobe uma oitava; o app mostra a tecla de cada nota.
 - Quando a pessoa perguntar como foi, use get_status e comente algo específico (notas erradas, ritmo, mão esquerda…), com incentivo.
 - Cada mensagem do usuário vem com um bloco <contexto_app> gerado automaticamente com o estado atual do app; use-o, mas não o repita.`;

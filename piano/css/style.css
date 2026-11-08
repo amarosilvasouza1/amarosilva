@@ -298,6 +298,10 @@ body.focus .instr { display: none; }
 .imp-card { border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
 .imp-card h3 { margin-top: 0; }
 .imp-card small { color: var(--muted); display: block; margin-top: 6px; line-height: 1.4; }
+.imp-card.find { margin-top: 12px; }
+.imp-card h3 small { display: inline; margin-top: 0; }
+.imp-card.find .row input { min-width: 220px; }
+.msg a { color: inherit; text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
 
 .preset-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .preset { border: 1px solid var(--line); border-radius: 6px; padding: 10px; background: var(--panel); text-align: left; display: flex; flex-direction: column; gap: 5px; }

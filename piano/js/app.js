@@ -870,6 +870,29 @@
     if (e.dataTransfer && e.dataTransfer.files.length) importFiles([...e.dataTransfer.files]);
   });
 
+  // procurar MIDI/partitura na internet (abre em outra aba)
+  function openSearch(where) {
+    const q = $('#findText').value.trim();
+    if (!q) {
+      toast('Escreva o nome da música.');
+      $('#findText').focus();
+      return;
+    }
+    const urls = {
+      musescore: 'https://musescore.com/sheetmusic?text=' + encodeURIComponent(q),
+      web: 'https://duckduckgo.com/?q=' + encodeURIComponent(q + ' midi download'),
+      sequencer: 'https://onlinesequencer.net/sequences?search=' + encodeURIComponent(q),
+    };
+    window.open(urls[where], '_blank', 'noopener');
+  }
+  $$('[data-find]').forEach((b) => (b.onclick = () => openSearch(b.dataset.find)));
+  $('#findText').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      openSearch('musescore');
+    }
+  });
+
   $('#vpAdd').onclick = () => {
     const txt = $('#vpText').value.trim();
     if (!txt) return toast('Cole a partitura de letras primeiro.');
@@ -916,7 +939,7 @@
       toast('"' + song.title + '" baixada.', null, [{ label: 'Aprender', fn: () => loadSong(song, 'practice') }]);
       $('#urlInput').value = '';
     } catch (e) {
-      toast('Não deu para baixar: ' + e.message, 'err');
+      toast('Não deu para baixar: ' + e.message + '. Abra o link, baixe o .mid e arraste aqui.', 'err', [{ label: 'Abrir link', fn: () => window.open(url, '_blank', 'noopener') }]);
     }
   };
 
@@ -1253,6 +1276,8 @@
   function md(text) {
     let h = esc(text);
     h = h.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+    // links http(s) viram clicáveis (abrem em outra aba)
+    h = h.replace(/\bhttps?:\/\/[^\s<>"')\]]+[^\s<>"')\].,;:!?]/g, (u) => '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>');
     h = h.replace(/^\s*[-*] /gm, '• ').replace(/\n/g, '<br>');
     return h;
   }
@@ -1279,6 +1304,7 @@
       app: player.describe(),
       teclado: { mapa: keymap.PRESETS[keymap.preset].name, formato: keymap.layout, oitava: keymap.octave },
       instrumento: audio.instrument,
+      biblioteca: songs.library.all().slice(0, 60).map((s) => s.title),
       ultimas_notas: recentNotes.filter((n) => now - n.t < 20000).slice(-12).map((n) => noteName(n.m)).join(' ') || '(nenhuma)',
     };
   }
@@ -1379,6 +1405,10 @@
   // ferramentas que a IA pode usar
   ai.registerTools({
     add_song: async (i) => {
+      const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\(.*?\)/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+      const same = songs.library.all().find((x) => norm(x.title) === norm(i.title));
+      if (same && !i.force_new)
+        return { ok: false, error: 'Já existe "' + same.title + '" na biblioteca (id ' + same.id + '). Abra com start_song, ou mande force_new=true se for mesmo um arranjo diferente.' };
       const song = songs.makeSong({
         title: i.title,
         composer: i.composer || '',
@@ -1407,7 +1437,9 @@
         toast('O assistente baixou "' + song.title + '"', null, [{ label: 'Aprender', fn: () => loadSong(song, 'practice') }]);
         return { ok: true, id: song.id, titulo: song.title, notas: song.notes.length, duracao_s: Math.round(song.duration) };
       } catch (e) {
-        return { ok: false, error: e.message };
+        if (/^https?:\/\//i.test(i.url))
+          toast('O site não deixou baixar direto. Abra o link, baixe o .mid e arraste na tela.', 'warn', [{ label: 'Abrir link', fn: () => window.open(i.url, '_blank', 'noopener') }]);
+        return { ok: false, error: e.message + ' (mostrei um botão para a pessoa abrir o link e baixar manualmente)' };
       }
     },
     list_songs: async () => ({
