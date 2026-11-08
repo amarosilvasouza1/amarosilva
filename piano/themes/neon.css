@@ -1,0 +1,39 @@
+/* pianeon — tema "Neon": escuro, roxo e ciano. Arraste este arquivo na tela para usar. */
+:root[data-theme] {
+  color-scheme: dark;
+  --bg: #0b0618;
+  --panel: #130b29;
+  --panel-2: #1b1137;
+  --line: #2f2158;
+  --grid: #221846;
+  --grid-2: #180f33;
+  --ink: #f4ecff;
+  --muted: #a99bd0;
+  --teal: #00e5ff;
+  --teal-soft: #0a5e70;
+  --blue: #ff4fd8;
+  --blue-soft: #6b2361;
+  --accent: #ffd23f;
+  --accent-ink: #ffd23f;
+  --on-accent: #1a1030;
+  --red: #ff5c7a;
+  --green: #3dffa8;
+  --amber: #ffd23f;
+  --dark: #05020d;
+  --dark-ink: #8f7fc0;
+  --bars: #5a4890;
+  --key: #2a1d52;
+  --key-side: #0d0820;
+  --key-dark: #07040f;
+  --key-dark-side: #000;
+  --key-fn: #1d1440;
+  --piano-white: #efe6ff;
+  --piano-white-edge: #8b78c4;
+  --piano-black: #120a26;
+  --piano-felt: #ff4fd8;
+  --r: 10px;
+}
+.card, .topbar { box-shadow: 0 0 0 1px rgba(255, 79, 216, 0.08), 0 10px 30px -18px rgba(0, 229, 255, 0.45); }
+.seg button.on, .tabs button.on, .chips button.on { background: linear-gradient(90deg, #00e5ff, #ff4fd8); color: #120a26; border-color: transparent; }
+.ib.play, .start, .choice.primary { background: #ffd23f; color: #1a1030; border-color: #ffd23f; }
+.mark { background: linear-gradient(135deg, #00e5ff, #ff4fd8); }

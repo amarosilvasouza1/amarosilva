@@ -300,6 +300,14 @@
         <label class="field chk"><input type="checkbox" id="setFold"> trazer notas fora do alcance para uma oitava que eu consiga tocar</label>
         <label class="field">Contagem antes de começar (s) <input type="number" id="setLeadIn" min="1" max="8" step="0.5"></label>
         <label class="field chk"><input type="checkbox" id="setFocus"> esconder os medidores</label>
+        <div class="field theme-field"><span>Tema personalizado</span><select id="setUserTheme" aria-label="Tema personalizado"></select></div>
+        <div class="row theme-row">
+          <label class="tb"><svg class="i"><use href="#i-upload"/></svg>Importar .css<input type="file" id="themeFile" accept=".css,text/css" hidden></label>
+          <button class="tb" id="themeModel"><svg class="i"><use href="#i-download"/></svg>Baixar modelo</button>
+          <button class="tb" id="themeRemove"><svg class="i"><use href="#i-trash-2"/></svg>Remover este tema</button>
+        </div>
+        <div class="row theme-row" id="themeExamples"><span class="muted small">Exemplos:</span></div>
+        <p class="muted small">Arraste um arquivo <b>.css</b> em qualquer lugar da tela para trocar cores, fontes e até a posição dos painéis. O modelo explica cada variável. Se um tema deixar a tela estranha, abra o endereço com <code>?semtema</code> no final e remova o tema aqui.</p>
         <label class="field">Desempenho <select id="setQuality"><option value="auto">Automático</option><option value="high">Alta qualidade</option><option value="balanced">Equilibrado</option><option value="low">Leve (computador fraco)</option></select></label>
         <button class="tb" id="resetScores"><svg class="i"><use href="#i-trash-2"/></svg>Apagar recordes</button>
       </div>
@@ -353,10 +361,11 @@
 </div>
 
 <div id="toasts" class="toasts" aria-live="polite"></div>
-<div id="dragOverlay" class="drag-overlay hidden">Solte o arquivo MIDI</div>
+<div id="dragOverlay" class="drag-overlay hidden">Solte o arquivo (música ou tema .css)</div>
 
 <script src="vendor/midi/Midi.js"></script>
 <script src="js/util.js"></script>
+<script src="js/themes.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/midi.js"></script>
 <script src="js/songs.js"></script>

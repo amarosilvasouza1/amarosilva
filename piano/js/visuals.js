@@ -4,9 +4,11 @@
   const PN = window.PN;
   const { util, bus, audio } = PN;
 
-  const MONO = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-  const SANS = '"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif';
+  // fontes e cores vêm das variáveis CSS (temas personalizados podem trocar)
+  let MONO = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  let SANS = '"Archivo", system-ui, -apple-system, "Segoe UI", sans-serif';
   let C = {};
+  let visuals = null;
   function readColors() {
     const cs = getComputedStyle(document.documentElement);
     const v = (n) => cs.getPropertyValue('--' + n).trim();
@@ -14,7 +16,26 @@
       bg: v('bg'), panel: v('panel'), panel2: v('panel-2'), line: v('line'), grid: v('grid'), grid2: v('grid-2'),
       ink: v('ink'), muted: v('muted'), teal: v('teal'), tealSoft: v('teal-soft'), blue: v('blue'), blueSoft: v('blue-soft'),
       purple: v('accent'), accent: v('accent'), accentInk: v('accent-ink'), red: v('red'), green: v('green'), amber: v('amber'), dark: v('dark'), darkInk: v('dark-ink'), bars: v('bars'),
+      pianoWhite: v('piano-white') || '#ffffff', pianoWhiteEdge: v('piano-white-edge') || '#c4cad3', pianoBlack: v('piano-black') || '#11141a', pianoFelt: v('piano-felt') || v('red'),
     };
+    if (v('mono')) MONO = v('mono');
+    if (v('sans')) SANS = v('sans');
+    if (visuals && visuals.MONO !== undefined) visuals.MONO = MONO;
+  }
+
+  /** Mistura duas cores #rrggbb (t = 0 → a, t = 1 → b). */
+  function mix(a, b, t) {
+    const p = (c) => {
+      if (!c || c[0] !== '#') return null;
+      let h = c.slice(1);
+      if (h.length === 3) h = h.split('').map((x) => x + x).join('');
+      const n = parseInt(h.slice(0, 6), 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    };
+    const x = p(a);
+    const y = p(b);
+    if (!x || !y) return a;
+    return 'rgb(' + x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',') + ')';
   }
 
   function alpha(color, a) {
@@ -875,14 +896,14 @@
         g.addColorStop(0, st);
         g.addColorStop(1, alpha(st, 0.75));
       } else {
-        g.addColorStop(0, '#f2f4f7');
-        g.addColorStop(0.85, '#ffffff');
-        g.addColorStop(1, '#e6e9ee');
+        g.addColorStop(0, mix(C.pianoWhite, '#000000', 0.05));
+        g.addColorStop(0.85, C.pianoWhite);
+        g.addColorStop(1, mix(C.pianoWhite, '#000000', 0.09));
       }
       ctx.fillStyle = g;
       rrect(ctx, x + 0.5, felt - 4, ww - 1, h - felt + 3, 4);
       ctx.fill();
-      ctx.strokeStyle = '#c4cad3';
+      ctx.strokeStyle = C.pianoWhiteEdge;
       ctx.lineWidth = 1;
       ctx.stroke();
       if (st === 'hint') {
@@ -892,8 +913,8 @@
       }
       const on = st && st !== 'hint';
       const kl = S.keyLabel(m);
-      if (kl && ww > 15) label(ctx, kl, x + ww / 2, h - 7, on ? '#fff' : '#3a4250', Math.min(11, ww * 0.42), 700, 'center');
-      if (m % 12 === 0 && ww > 13) label(ctx, S.noteName(m), x + ww / 2, h - 22, on ? '#fff' : '#8a93a2', Math.min(10, ww * 0.36), 500, 'center');
+      if (kl && ww > 15) label(ctx, kl, x + ww / 2, h - 7, on ? '#fff' : mix(C.pianoWhite, C.pianoBlack, 0.8), Math.min(11, ww * 0.42), 700, 'center');
+      if (m % 12 === 0 && ww > 13) label(ctx, S.noteName(m), x + ww / 2, h - 22, on ? '#fff' : mix(C.pianoWhite, C.pianoBlack, 0.45), Math.min(10, ww * 0.36), 500, 'center');
     }
     // pretas
     for (let m = lo; m <= hi; m++) {
@@ -906,9 +927,9 @@
         g.addColorStop(0, st);
         g.addColorStop(1, alpha(st, 0.8));
       } else {
-        g.addColorStop(0, '#11141a');
-        g.addColorStop(0.9, '#2b303b');
-        g.addColorStop(1, '#1a1e26');
+        g.addColorStop(0, C.pianoBlack);
+        g.addColorStop(0.9, mix(C.pianoBlack, '#ffffff', 0.13));
+        g.addColorStop(1, mix(C.pianoBlack, '#ffffff', 0.05));
       }
       ctx.fillStyle = g;
       rrect(ctx, x, felt - 4, bw, bh + 4 - felt + 4, 3);
@@ -919,12 +940,12 @@
         ctx.stroke();
       }
       const kl = S.keyLabel(m);
-      if (kl && bw > 14) label(ctx, kl, x + bw / 2, bh - 4, '#e8ebf1', Math.min(10, bw * 0.42), 600, 'center');
+      if (kl && bw > 14) label(ctx, kl, x + bw / 2, bh - 4, mix(C.pianoBlack, '#ffffff', 0.85), Math.min(10, bw * 0.42), 600, 'center');
     }
     // feltro
     ctx.fillStyle = C.ink;
     ctx.fillRect(0, 0, w, felt);
-    ctx.fillStyle = alpha(C.red, 0.7);
+    ctx.fillStyle = alpha(C.pianoFelt, 0.8);
     ctx.fillRect(0, felt - 1.5, w, 1.5);
     p.geo = { whites, xw, ww, blacks };
   }
@@ -1011,7 +1032,7 @@
     }
   }
 
-  const visuals = {
+  visuals = {
     MONO,
     init(map) {
       readColors();

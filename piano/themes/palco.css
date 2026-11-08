@@ -1,0 +1,8 @@
+/* pianeon — tema "Palco": só layout. Esconde a lista e os medidores e deixa a pista, o piano e o teclado bem grandes.
+   As músicas continuam no botão "Músicas" do topo. Arraste este arquivo na tela para usar. */
+.stage { grid-template-columns: minmax(0, 1fr) !important; }
+.sidebar, .instr { display: none !important; }
+.only-narrow { display: inline-flex !important; }
+.piano { height: 104px !important; }
+.p-highway { min-height: 320px; }
+.kc { height: min(38px, calc(var(--u) * 0.66)) !important; }

@@ -1,0 +1,38 @@
+/* pianeon — tema "Papel": claro, tons de papel e títulos com serifa. Arraste este arquivo na tela para usar. */
+:root[data-theme] {
+  color-scheme: light;
+  --bg: #efe6d4;
+  --panel: #faf4e6;
+  --panel-2: #f2e8d3;
+  --line: #d8c9a8;
+  --grid: #e8dcc2;
+  --grid-2: #f3ead7;
+  --ink: #2b2118;
+  --muted: #6e5d47;
+  --teal: #2f7d6d;
+  --teal-soft: #a9d0c4;
+  --blue: #8a3b2e;
+  --blue-soft: #e0b5a8;
+  --accent: #b5532a;
+  --accent-ink: #9a3f19;
+  --on-accent: #fffaf0;
+  --red: #a8322b;
+  --green: #4d7c2f;
+  --amber: #b9861c;
+  --dark: #2b2118;
+  --dark-ink: #c9b791;
+  --bars: #b9a77f;
+  --key: #fffaf0;
+  --key-side: #d3c19b;
+  --key-dark: #3a2c20;
+  --key-dark-side: #1d150e;
+  --key-fn: #eadfc6;
+  --piano-white: #fffaf0;
+  --piano-white-edge: #cdb98f;
+  --piano-black: #2b2118;
+  --piano-felt: #8a3b2e;
+  --sans: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --r: 3px;
+}
+.song-title, .ready-card h2, .sheet-head h2, .wordmark, .brand { font-family: Georgia, 'Times New Roman', serif; font-stretch: normal; }
+.card, .topbar { box-shadow: 0 1px 0 #fffaf0 inset, 0 2px 0 rgba(43, 33, 24, 0.06); }

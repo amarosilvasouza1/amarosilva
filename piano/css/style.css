@@ -313,6 +313,8 @@ body.lite .p-gram, body.lite .p-vector { display: none; }
 .imp-card h3 { margin-top: 0; }
 .imp-card small { color: var(--muted); display: block; margin-top: 6px; line-height: 1.4; }
 .imp-card.find { margin-top: 12px; }
+.theme-row { margin: 6px 0 4px; }
+.theme-field select { flex: 0 1 270px; }
 .imp-card h3 small { display: inline; margin-top: 0; }
 .imp-card.find .row input { min-width: 220px; }
 .msg a { color: inherit; text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }

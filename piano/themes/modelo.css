@@ -1,0 +1,95 @@
+/*
+  pianeon — modelo de tema
+  ========================
+
+  Como usar: copie este arquivo, mude o que quiser e arraste o .css em qualquer
+  lugar da tela do pianeon. O tema fica salvo no navegador e pode ser trocado ou
+  removido em Ajustes → Tela e jogo → Tema personalizado.
+
+  Se um tema deixar a tela ilegível, abra o endereço com ?semtema no final
+  (ex.: .../piano/index.html?semtema) e remova o tema em Ajustes.
+
+  Dica: use ":root[data-theme]" para valer no tema claro e no escuro.
+  Para mudar só um deles, use ":root[data-theme='light']" ou ":root[data-theme='dark']".
+*/
+
+:root[data-theme] {
+  /* ---------------- cores da interface ---------------- */
+  --bg: #e9e7e3;          /* fundo da página */
+  --panel: #f6f5f2;       /* fundo dos painéis/cartões */
+  --panel-2: #eeece8;     /* fundo de campos, linhas selecionadas, piso da pista */
+  --line: #d3cfc8;        /* bordas */
+  --grid: #e3e0da;        /* linhas de grade (piano roll, pista) */
+  --grid-2: #efede9;      /* faixas das teclas pretas no piano roll */
+  --ink: #161514;         /* texto principal e botões escuros */
+  --muted: #66625b;       /* texto secundário */
+
+  /* ---------------- cores das notas ---------------- */
+  --teal: #12a0ae;        /* mão direita */
+  --teal-soft: #9fd5da;   /* mão direita (notas futuras, anéis) */
+  --blue: #2f66d9;        /* mão esquerda e dicas "toque aqui" */
+  --blue-soft: #adc2ee;   /* mão esquerda (notas futuras) */
+  --accent: #ff5a1f;      /* o que VOCÊ toca, destaque principal */
+  --accent-ink: #c2410c;  /* destaque usado como texto/fundo de botão */
+  --on-accent: #ffffff;   /* texto em cima do destaque */
+  --red: #c93a32;         /* erros, gravação */
+  --green: #2a9d63;       /* acertos */
+  --amber: #e0a01b;       /* estrelas, recordes */
+
+  /* ---------------- medidores ---------------- */
+  --dark: #12110f;        /* fundo do espectrograma e das miniaturas */
+  --dark-ink: #8d887f;    /* texto em cima do --dark */
+  --bars: #a9a49b;        /* barras do waveform */
+
+  /* ---------------- teclado do computador desenhado ---------------- */
+  --key: #fbfaf8;         /* tecla de nota branca */
+  --key-side: #cfcac2;    /* lateral/sombra da tecla branca */
+  --key-dark: #1c1b19;    /* tecla de sustenido (nota preta) */
+  --key-dark-side: #000;  /* lateral da tecla preta */
+  --key-fn: #e7e4df;      /* teclas de comando (Enter, Shift, Espaço…) */
+
+  /* ---------------- piano desenhado ---------------- */
+  --piano-white: #ffffff;
+  --piano-white-edge: #c4cad3;
+  --piano-black: #11141a;
+  --piano-felt: #c93a32;  /* faixa de feltro em cima das teclas */
+
+  /* ---------------- fontes e formas ---------------- */
+  --sans: 'Archivo', system-ui, sans-serif;            /* textos */
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;    /* números e notas */
+  --r: 6px;                                            /* arredondamento dos cartões */
+}
+
+/*
+  Fontes da internet: dá para importar no começo do arquivo, por exemplo
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+  e depois usar  --sans: 'Space Grotesk', sans-serif;
+*/
+
+/* ===================== layout (exemplos, tire o comentário para usar) =====================
+
+  Peças da tela (classes/ids que você pode mexer):
+    .topbar      barra de cima            .stage     área do meio (lista | pista | medidores)
+    .sidebar     lista de músicas         .p-highway pista 3D
+    .instr       medidores (grade)        .p-dial .p-roll .p-wave .p-scope .p-spec .p-vector .p-gram
+    .piano       piano desenhado          .keys      teclado do computador desenhado
+    .status      rodapé                   .kc        cada tecla do teclado desenhado
+
+  Esconder a lista de músicas e os medidores (pista bem grande):
+    .stage { grid-template-columns: minmax(0, 1fr) !important; }
+    .sidebar, .instr { display: none !important; }
+
+  Lista de músicas do lado direito:
+    .stage { grid-template-columns: minmax(0, 1fr) minmax(320px, 0.6fr) 264px !important; }
+    .sidebar { order: 3; }
+
+  Piano mais alto:
+    .piano { height: 110px !important; }
+
+  Teclado do computador antes do piano:
+    .keys { order: 2; }  .piano { order: 3; }  .status { order: 4; }
+    #app { grid-template-rows: auto minmax(0, 1fr) auto auto auto; }
+
+  Cantos bem redondos e sombra:
+    .card, .topbar { border-radius: 16px !important; box-shadow: 0 8px 30px rgba(0,0,0,.12); }
+*/

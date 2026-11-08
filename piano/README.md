@@ -76,6 +76,15 @@ A outra mão toca sozinha. Se a música tiver notas fora do alcance do seu tecla
 
 > Arquivos de áudio (mp3/wav) não viram notas automaticamente. Use a versão MIDI da música ou peça para a IA.
 
+## Temas: troque o visual arrastando um .css
+
+Arraste um arquivo **.css** em qualquer lugar da tela e o visual muda na hora: cores, fontes e até a posição dos painéis. O tema fica salvo no navegador.
+
+- Em **Ajustes → Tela e jogo → Tema personalizado** dá para trocar entre os temas salvos, voltar ao visual padrão, remover e baixar o **modelo**.
+- O modelo (`themes/modelo.css`) explica cada variável (`--bg`, `--panel`, `--ink`, `--teal` = mão direita, `--blue` = mão esquerda, `--accent` = o que você toca, cores do piano e do teclado, `--sans`/`--mono` para as fontes) e traz exemplos de layout: esconder a lista, piano mais alto, lista do lado direito…
+- Exemplos prontos na pasta `themes/`: **neon.css** (escuro roxo/ciano), **papel.css** (claro com serifa) e **palco.css** (só pista, piano e teclado).
+- Se um tema deixar a tela ilegível, abra o endereço com `?semtema` no final (ex.: `.../piano/?semtema`) e remova o tema em Ajustes.
+
 ## Desempenho
 
 Se o computador for mais fraco, o app entra sozinho no **modo leve** (menos resolução nos desenhos e medidores mais calmos). Dá para escolher em **Ajustes → Tela e jogo → Desempenho**: Automático, Alta qualidade, Equilibrado ou Leve. Os painéis só são redesenhados quando algo neles muda.
@@ -124,8 +133,10 @@ piano/
   index.html        interface (inclui os ícones)
   css/fonts.css     fontes embutidas
   css/style.css     visual (tema claro e escuro)
+  themes/           modelo de tema e temas de exemplo (.css)
   vendor/           ícones, fontes e @tonejs/midi (com as licenças)
   js/util.js        utilidades
+  js/themes.js      temas personalizados (.css arrastado na tela)
   js/audio.js       motor de som (samples + sintetizadores)
   js/midi.js        leitura/gravação de MIDI e teclado MIDI
   js/songs.js       biblioteca, notação e partituras de letras

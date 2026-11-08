@@ -867,6 +867,18 @@
   async function importFiles(files) {
     let last = null;
     for (const f of files) {
+      // folha de estilo = tema personalizado
+      if (/\.css$/i.test(f.name) || f.type === 'text/css') {
+        try {
+          const prev = PN.themes.active;
+          const t = PN.themes.add(f.name.replace(/\.css$/i, ''), await f.text());
+          toast('Tema "' + t.name + '" aplicado.', null, [{ label: 'Desfazer', fn: () => PN.themes.apply(prev) }]);
+          if (PN.themes.disabledByUrl) toast('Os temas estão desligados pelo ?semtema no endereço.', 'warn');
+        } catch (e) {
+          toast(e.message, 'err');
+        }
+        continue;
+      }
       // O tipo informado pelo sistema não é confiável (no Windows um .mid vem como "audio/mid"),
       // então o conteúdo do arquivo é que decide.
       try {
@@ -1157,6 +1169,7 @@
     $('#setFold').checked = player.fold;
     $('#setLeadIn').value = player.leadIn;
     $('#setFocus').checked = settings.focus;
+    fillThemes();
     $('#setQuality').value = settings.quality;
     $('#midiStatus').textContent = midi.input.enabled ? (midi.input.devices.length ? midi.input.devices.join(', ') : 'nenhum teclado MIDI conectado') : navigator.requestMIDIAccess ? 'desconectado' : 'não suportado neste navegador';
     fillAi();
@@ -1202,6 +1215,56 @@
     store.set('leadIn', player.leadIn);
   };
   $('#setFocus').onchange = (e) => setFocus(e.target.checked);
+
+  // temas personalizados (.css)
+  function fillThemes() {
+    const T = PN.themes;
+    $('#setUserTheme').innerHTML =
+      '<option value="">Nenhum (visual padrão)</option>' + T.list.map((t) => '<option value="' + esc(t.id) + '"' + (T.active === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('');
+    $('#themeRemove').disabled = !T.active;
+    const ex = $('#themeExamples');
+    if (!ex.querySelector('button'))
+      ex.insertAdjacentHTML('beforeend', T.EXAMPLES.map((e) => '<button class="tb sm" data-theme-ex="' + e.id + '" title="' + esc(e.desc) + '">' + esc(e.name) + '</button>').join(''));
+  }
+  $('#setUserTheme').onchange = (e) => {
+    PN.themes.apply(e.target.value || null);
+    fillThemes();
+  };
+  $('#themeRemove').onclick = () => {
+    const t = PN.themes.get(PN.themes.active);
+    if (t && confirm('Remover o tema "' + t.name + '"?')) PN.themes.remove(t.id);
+    fillThemes();
+  };
+  $('#themeFile').onchange = async (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (f) await importFiles([f]);
+    fillThemes();
+  };
+  $('#themeModel').onclick = async () => {
+    try {
+      const res = await fetch('themes/modelo.css');
+      if (!res.ok) throw new Error();
+      download('pianeon-tema-modelo.css', await res.text(), 'text/css');
+    } catch (err) {
+      toast('Não deu para baixar daqui; o modelo está na pasta themes do projeto (themes/modelo.css).', 'warn');
+    }
+  };
+  $('#themeExamples').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-theme-ex]');
+    if (!b) return;
+    try {
+      const t = await PN.themes.loadExample(b.dataset.themeEx);
+      toast('Tema "' + t.name + '" aplicado.');
+    } catch (err) {
+      toast(err.message, 'warn');
+    }
+    fillThemes();
+  });
+  bus.on('usertheme', () => {
+    if ($('#mSettings').classList.contains('open')) fillThemes();
+    sizeKb(kbEl);
+  });
   $('#setQuality').onchange = (e) => {
     settings.quality = e.target.value;
     saveSettings();
@@ -1803,6 +1866,7 @@
     visuals.frame(S);
     updateKeyStates(S.hintMidis, S.autoMidis);
     if (++frameNo % 6 === 0) updateFooter();
+    if (PN.themes.disabledByUrl && PN.themes.active) setTimeout(() => toast('Tema personalizado desligado por causa do ?semtema no endereço.', 'warn'), 600);
     requestAnimationFrame(frame);
   }
 
