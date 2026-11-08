@@ -38,6 +38,8 @@
       this.metronome = store.get('metronome', false);
       this.freeBpm = store.get('freeBpm', 100);
       this.fold = store.get('fold', true);
+      this.level = store.get('level', 'medium'); // easy | medium | full
+      this.playCount = 0;
       this.leadIn = store.get('leadIn', 2.6); // segundos reais antes da 1ª nota
       this.wall0 = performance.now() / 1000;
       this.lastBeat = null;
@@ -94,21 +96,33 @@
         return;
       }
       const playing = this.mode === 'practice' || this.mode === 'challenge';
-      this.notes = song.notes.map((n, i) => ({
-        midi: n.midi,
-        time: n.time,
-        duration: n.duration,
-        velocity: n.velocity,
-        hand: n.hand,
-        i,
-        target: playing && !!this.hands[n.hand],
-        playMidi: n.midi,
-        judge: null,
-      }));
+      const roles = this.rolesFor(song);
+      this.notes = [];
+      song.notes.forEach((n, i) => {
+        // papel da faixa: R/L = mão que você toca, A = o app acompanha, M = silenciada
+        const role = roles && n.track != null ? roles[n.track] || 'A' : n.hand;
+        if (role === 'M') return;
+        const hand = role === 'R' || role === 'L' ? role : n.hand;
+        this.notes.push({
+          midi: n.midi,
+          time: n.time,
+          duration: n.duration,
+          velocity: n.velocity,
+          hand,
+          track: n.track,
+          i,
+          target: playing && role !== 'A' && !!this.hands[hand],
+          playMidi: n.midi,
+          judge: null,
+        });
+      });
+      this.applyLevel();
       this.applyFold();
+      this.dedupeTargets();
       this.targets = this.notes.filter((n) => n.target);
       this.auto = this.notes.filter((n) => !n.target);
       this.stats.total = this.targets.length;
+      this.playCount = this.targets.length;
       // grupos (acordes) para o modo praticar
       this.groups = [];
       for (const n of this.targets) {
@@ -119,6 +133,89 @@
         } else this.groups.push({ time: n.time, notes: [n], pending: new Set([n.playMidi]) });
       }
       this.computeLanes();
+    }
+
+    /**
+     * Deixa a parte do usuário tocável no teclado do computador:
+     * Fácil = uma nota por vez em cada mão (melodia/baixo), Médio = até 2 por mão, Completo = tudo.
+     * As notas tiradas continuam soando: o app toca junto.
+     */
+    applyLevel() {
+      if (this.level === 'full') return;
+      const keep = this.level === 'easy' ? 1 : 2;
+      const minGap = this.level === 'easy' ? 0.12 : 0.07; // notas rápidas demais para o teclado
+      for (const hand of ['R', 'L']) {
+        const list = this.notes.filter((n) => n.target && n.hand === hand);
+        let i = 0;
+        let lastKept = -1;
+        while (i < list.length) {
+          const cluster = [list[i]];
+          let j = i + 1;
+          while (j < list.length && list[j].time - list[i].time < 0.035) cluster.push(list[j++]);
+          cluster.sort((a, b) => (hand === 'R' ? b.midi - a.midi : a.midi - b.midi));
+          if (lastKept >= 0 && list[i].time - lastKept < minGap) {
+            for (const n of cluster) n.target = false;
+          } else {
+            cluster.slice(keep).forEach((n) => (n.target = false));
+            lastKept = list[i].time;
+          }
+          i = j;
+        }
+      }
+    }
+
+    /** Depois de trazer notas para o alcance, duas notas iguais no mesmo instante viram uma só. */
+    dedupeTargets() {
+      const seen = new Map();
+      for (const n of this.notes) {
+        if (!n.target) continue;
+        const key = n.playMidi + ':' + Math.round(n.time / 0.035);
+        if (seen.has(key)) n.target = false;
+        else seen.set(key, true);
+      }
+    }
+
+    setLevel(l) {
+      if (!['easy', 'medium', 'full'].includes(l)) return;
+      this.level = l;
+      store.set('level', l);
+      if (this.song) this.restart(false);
+    }
+
+    /** Papéis das faixas de um MIDI com várias faixas (salvos por música). */
+    rolesFor(song) {
+      if (!song || !song.tracks || song.tracks.length < 2) return null;
+      const saved = (store.get('roles', {}) || {})[song.id];
+      if (saved) return saved;
+      return Player.defaultRoles(song);
+    }
+    static defaultRoles(song) {
+      const tracks = song.tracks.filter((t) => t.noteCount > 0);
+      const roles = {};
+      if (tracks.length <= 2) {
+        const sorted = tracks.slice().sort((a, b) => b.avgPitch - a.avgPitch);
+        roles[sorted[0].index] = 'R';
+        if (sorted[1]) roles[sorted[1].index] = 'L';
+        return roles;
+      }
+      // várias faixas: a mais aguda com bastante nota é a melodia, a mais grave é o baixo
+      const total = tracks.reduce((s, t) => s + t.noteCount, 0);
+      const big = tracks.filter((t) => t.noteCount >= total * 0.06);
+      const pool = big.length ? big : tracks;
+      const melody = pool.slice().sort((a, b) => b.avgPitch - a.avgPitch)[0];
+      const bass = pool.filter((t) => t !== melody).sort((a, b) => a.avgPitch - b.avgPitch)[0];
+      for (const t of tracks) roles[t.index] = 'A';
+      roles[melody.index] = 'R';
+      if (bass) roles[bass.index] = 'L';
+      return roles;
+    }
+    setTrackRole(song, index, role) {
+      const all = store.get('roles', {}) || {};
+      const cur = Object.assign({}, this.rolesFor(song) || {});
+      cur[index] = role;
+      all[song.id] = cur;
+      store.set('roles', all);
+      if (this.song && this.song.id === song.id) this.restart(false);
     }
 
     /** Traz para o alcance do teclado as notas que o usuário precisa tocar. */

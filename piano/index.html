@@ -112,10 +112,14 @@
             <div class="seg" id="rcModes"><button data-mode="watch">Ouvir</button><button data-mode="practice">Aprender</button><button data-mode="challenge">Jogar</button></div>
             <span id="rcHandsLabel">Mãos</span>
             <div class="seg" id="rcHands"><button data-hand="L">Esquerda</button><button data-hand="LR">As duas</button><button data-hand="R">Direita</button></div>
+            <span id="rcLevelLabel">Nível</span>
+            <div class="seg" id="rcLevel"><button data-level="easy" title="Uma nota por vez em cada mão">Fácil</button><button data-level="medium" title="Até duas notas por mão">Médio</button><button data-level="full" title="Todas as notas">Completo</button></div>
             <span>Velocidade</span>
             <span class="stepper"><button id="rcSlower" aria-label="Mais devagar"><svg class="i"><use href="#i-minus"/></svg></button><b id="rcSpeed">100%</b><button id="rcFaster" aria-label="Mais rápido"><svg class="i"><use href="#i-plus"/></svg></button></span>
           </div>
           <div id="rcHandsRow" hidden></div>
+          <div class="rc-count" id="rcCount"></div>
+          <button class="tb sm rc-tracks hidden" id="rcTracks"><svg class="i"><use href="#i-list-music"/></svg><span>Escolher faixas</span></button>
           <button class="start" id="rcStart"><svg class="i"><use href="#i-play"/></svg>Começar</button>
           <small class="muted">ou aperte <kbd>Enter</kbd></small>
         </div>
@@ -309,6 +313,18 @@
         <label class="field chk" id="aiWebRow"><input type="checkbox" id="aiWeb"> deixar buscar na web (ajuda a achar MIDIs, mas custa mais)</label>
         <div class="row end"><span id="aiTestStatus" class="muted"></span><button class="tb" id="aiTest">Testar conexão</button></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Faixas do MIDI -->
+<div class="modal" id="mTracks" role="dialog" aria-modal="true" aria-label="Faixas da música">
+  <div class="sheet">
+    <div class="sheet-head"><h2>Faixas da música</h2><button class="ib close" data-close aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <div class="sheet-body">
+      <p class="lead">Escolha qual faixa é a sua mão direita e qual é a esquerda. As faixas em "App toca" continuam soando como acompanhamento; "Mudo" tira a faixa.</p>
+      <div id="trackList" class="track-list"></div>
+      <div class="row end"><button class="tb" id="tracksReset">Voltar à escolha automática</button><button class="tb" id="tracksDone" style="background:var(--ink);color:var(--panel);border-color:var(--ink)">Pronto</button></div>
     </div>
   </div>
 </div>

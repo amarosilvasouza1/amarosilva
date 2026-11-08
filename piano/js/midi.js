@@ -46,8 +46,8 @@
     notes.sort((a, b) => a.time - b.time || a.midi - b.midi);
     const duration = notes.reduce((mx, n) => Math.max(mx, n.time + n.duration), 0);
     const tempo = m.header.tempos && m.header.tempos[0];
-    const named = m.tracks.find((t) => t.name);
-    return { format: 1, name: (m.header.name || (named && named.name) || '').trim(), notes, tracks, duration, bpm: Math.round(tempo ? tempo.bpm : 120) };
+    // só o nome da sequência (faixa 0); nome de instrumento não vira título/compositor
+    return { format: 1, name: (m.header.name || '').trim(), notes, tracks, duration, bpm: Math.round(tempo ? tempo.bpm : 120) };
   }
 
   /** Leitor próprio: converte um ArrayBuffer .mid em { name, notes[], tracks[], duration, bpm }. */
@@ -251,8 +251,9 @@
     notes.sort((a, b) => a.time - b.time || a.midi - b.midi);
     const duration = notes.reduce((m, n) => Math.max(m, n.time + n.duration), 0);
     const bpm = Math.round(60000000 / (tempos[0] ? tempos[0].uspq : 500000));
-    const named = rawTracks.find((t) => t.name);
-    return { format, name: named ? named.name : '', notes, tracks: tracks.filter((t) => t.noteCount > 0), duration, bpm };
+    const first = rawTracks[0];
+    const seqName = first && (format === 0 || !first.events.some((e) => e.note != null)) ? first.name : '';
+    return { format, name: seqName || '', notes, tracks: tracks.filter((t) => t.noteCount > 0), duration, bpm };
   }
 
   /** Divide em mão direita (R) e esquerda (L). */

@@ -453,7 +453,12 @@
       source: s.source,
       tags: s.tags,
       created: s.created || Date.now(),
-      n: s.notes.map((n) => [n.midi, Math.round(n.time * 1000), Math.round(n.duration * 1000), Math.round((n.velocity || 0.8) * 127), n.hand === 'L' ? 1 : 0]),
+      tr: s.tracks && s.tracks.length > 1 ? s.tracks : undefined,
+      n: s.notes.map((n) => {
+        const a = [n.midi, Math.round(n.time * 1000), Math.round(n.duration * 1000), Math.round((n.velocity || 0.8) * 127), n.hand === 'L' ? 1 : 0];
+        if (n.track != null && s.tracks && s.tracks.length > 1) a.push(n.track);
+        return a;
+      }),
     };
   }
   function unpackSong(p) {
@@ -469,7 +474,8 @@
       source: p.source,
       tags: p.tags || [],
       created: p.created,
-      notes: p.n.map((a) => ({ midi: a[0], time: a[1] / 1000, duration: a[2] / 1000, velocity: a[3] / 127, hand: a[4] ? 'L' : 'R' })),
+      tracks: p.tr || undefined,
+      notes: p.n.map((a) => ({ midi: a[0], time: a[1] / 1000, duration: a[2] / 1000, velocity: a[3] / 127, hand: a[4] ? 'L' : 'R', track: a.length > 5 ? a[5] : undefined })),
     });
   }
 
@@ -526,7 +532,8 @@
       timeSig: 4,
       source: 'midi',
       tags: ['midi'],
-      notes: parsed.notes.map((n) => ({ midi: n.midi, time: n.time, duration: n.duration, velocity: n.velocity, hand: n.hand })),
+      tracks: (parsed.tracks || []).map((t) => ({ index: t.index, name: t.name, instrument: t.instrument || '', noteCount: t.noteCount, avgPitch: Math.round(t.avgPitch) })),
+      notes: parsed.notes.map((n) => ({ midi: n.midi, time: n.time, duration: n.duration, velocity: n.velocity, hand: n.hand, track: n.track })),
     });
   }
 

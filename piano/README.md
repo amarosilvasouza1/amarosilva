@@ -58,6 +58,11 @@ Em **⌨ TECLADO → TROCAR MAPA** dá para escolher outros estilos:
 
 A outra mão toca sozinha. Se a música tiver notas fora do alcance do seu teclado, o app ajusta a oitava (dá para desligar em Ajustes).
 
+**Música com nota demais para o teclado?** No cartão de começar:
+- **Nível**: *Fácil* deixa só uma nota por vez em cada mão (melodia e baixo), *Médio* até duas, *Completo* tudo. As notas tiradas não somem: o app toca junto, então a música continua cheia. Também ajuda com teclados de computador que não registram muitas teclas apertadas ao mesmo tempo.
+- **Escolher faixas** (MIDI com vários instrumentos): diga qual faixa é a sua mão direita, qual é a esquerda, quais o app só acompanha e quais ficam mudas.
+- O cartão mostra quantas notas você vai tocar antes de começar.
+
 ## Músicas
 
 - **18 músicas de exemplo** (domínio público), separadas em:

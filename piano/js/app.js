@@ -494,7 +494,60 @@
     $('#rcHands').classList.toggle('hidden', noHands);
     $('#rcHandsLabel').classList.toggle('hidden', noHands);
     $('#rcSpeed').textContent = Math.round(player.speed * 100) + '%';
+    const playingMode = player.mode !== 'watch';
+    $$('#rcLevel button').forEach((b) => b.classList.toggle('on', b.dataset.level === player.level));
+    $('#rcLevel').classList.toggle('hidden', !playingMode);
+    $('#rcLevelLabel').classList.toggle('hidden', !playingMode);
+    const total = player.notes.length;
+    $('#rcCount').innerHTML = playingMode
+      ? 'Você toca <b>' + player.playCount + '</b> de <b>' + total + '</b> notas' + (player.playCount < total ? '; o app toca o resto junto.' : '.')
+      : '';
+    const multi = s.tracks && s.tracks.length > 1;
+    $('#rcTracks').classList.toggle('hidden', !multi);
+    if (multi) $('#rcTracks').querySelector('span').textContent = 'Escolher faixas (' + s.tracks.length + ')';
   }
+  $$('#rcLevel button').forEach(
+    (b) =>
+      (b.onclick = () => {
+        player.setLevel(b.dataset.level);
+        updateReady();
+      })
+  );
+
+  // janela de faixas
+  const ROLE_LABEL = [['R', 'Direita'], ['L', 'Esquerda'], ['A', 'App toca'], ['M', 'Mudo']];
+  function renderTracks() {
+    const s = player.song;
+    if (!s || !s.tracks) return;
+    const roles = player.rolesFor(s) || {};
+    $('#trackList').innerHTML = s.tracks
+      .map(
+        (t) =>
+          '<div class="track-row" data-track="' + t.index + '"><div style="min-width:0"><div class="t">' + esc(t.name || 'Faixa ' + (t.index + 1)) + '</div><div class="s">' +
+          esc([t.instrument, t.noteCount + ' notas', 'região de ' + noteName(t.avgPitch)].filter(Boolean).join(', ')) + '</div></div>' +
+          '<div class="seg">' + ROLE_LABEL.map(([r, l]) => '<button data-role="' + r + '" class="' + ((roles[t.index] || 'A') === r ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>'
+      )
+      .join('');
+  }
+  $('#rcTracks').onclick = () => {
+    renderTracks();
+    openModal('mTracks');
+  };
+  $('#trackList').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-role]');
+    if (!b || !player.song) return;
+    const idx = Number(b.closest('.track-row').dataset.track);
+    player.setTrackRole(player.song, idx, b.dataset.role);
+    renderTracks();
+  });
+  $('#tracksReset').onclick = () => {
+    const all = store.get('roles', {}) || {};
+    if (player.song) delete all[player.song.id];
+    store.set('roles', all);
+    if (player.song) player.restart(false);
+    renderTracks();
+  };
+  $('#tracksDone').onclick = () => closeModal('mTracks');
   $$('#rcModes button').forEach((b) => (b.onclick = () => player.song && loadSong(player.song, b.dataset.mode)));
   $$('#rcHands button').forEach(
     (b) =>
